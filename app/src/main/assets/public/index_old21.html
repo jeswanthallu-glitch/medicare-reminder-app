@@ -1,0 +1,2565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MediCare Reminder</title>
+
+<style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;background:#f4f7fb;color:#172033}
+header{background:#172554;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+header h1{margin:0;font-size:21px}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+button{border:0;border-radius:6px;padding:9px 13px;background:#2563eb;color:white;cursor:pointer}
+button:hover{opacity:.9}
+.danger{background:#dc2626}.green{background:#16a34a}.gray{background:#64748b}
+.container{max-width:950px;margin:auto;padding:18px}
+.page{display:none}.page.active{display:block}
+.card{background:white;padding:20px;margin:12px 0;border-radius:12px;box-shadow:0 2px 9px #0001}
+input,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid #cbd5e1;border-radius:6px}
+label{font-weight:bold}
+.msg{padding:8px;margin:8px 0;border-radius:6px}
+.err{background:#fee2e2;color:#991b1b}.ok{background:#dcfce7;color:#166534}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.hidden{display:none!important}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:#fff;padding:12px;text-align:center;border-radius:10px;box-shadow:0 2px 7px #0001}
+.stat h3{font-size:24px;margin:6px}
+.schedule{background:#f8fbff;border-left:5px solid #2563eb;padding:12px;margin:10px 0;border-radius:7px}
+.alert{background:#fff1f2;border-left:5px solid #dc2626;padding:12px;margin:10px 0;border-radius:7px}
+.small{color:#64748b;font-size:13px}
+#reminderSettings input[type="checkbox"]{width:auto;margin-right:7px}
+.patient-card{border:1px solid #dbeafe;padding:15px;margin:10px 0;border-radius:10px;background:#f8fbff}
+.patient-card h3{margin-top:0}
+.selected{border:2px solid #2563eb}
+.status-taken{color:#166534;font-weight:bold}.status-missed{color:#b91c1c;font-weight:bold}.status-pending{color:#b45309;font-weight:bold}
+.timeRow{margin-bottom:8px}.timeRow label{display:block;margin-bottom:4px}.timeRow input[type="checkbox"]{width:auto;margin-right:6px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:bold;background:#e2e8f0}
+.badge.patient{background:#dcfce7;color:#166534}.badge.caretaker{background:#dbeafe;color:#1d4ed8}
+.empty{text-align:center;color:#64748b;padding:20px}
+
+/* Custom Delete Account Modal */
+.delete-modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.68);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:9999;
+}
+.delete-modal-overlay.show{display:flex}
+.delete-modal{
+  width:min(430px,100%);
+  background:white;
+  border-radius:18px;
+  padding:24px;
+  box-shadow:0 20px 60px #0006;
+  animation:deleteModalIn .18s ease-out;
+}
+@keyframes deleteModalIn{
+  from{transform:scale(.95);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+.delete-icon{
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  background:#fee2e2;
+  color:#dc2626;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  margin-bottom:14px;
+}
+.delete-modal h2{margin:0 0 8px;font-size:21px}
+.delete-modal p{color:#64748b;line-height:1.5;margin:8px 0}
+.delete-warning{
+  background:#fff1f2;
+  border:1px solid #fecdd3;
+  color:#9f1239;
+  padding:11px;
+  border-radius:9px;
+  margin:14px 0;
+  font-size:14px;
+}
+.delete-modal input{
+  margin-top:5px;
+  border:2px solid #e2e8f0;
+}
+.delete-modal input:focus{outline:none;border-color:#dc2626}
+.delete-modal-actions{
+  display:flex;
+  gap:9px;
+  justify-content:flex-end;
+  margin-top:16px;
+}
+.delete-modal-actions button{min-width:100px}
+.cancel-delete{background:#64748b}
+.confirm-delete{background:#dc2626}
+
+@media(max-width:650px){
+.stats{grid-template-columns:repeat(2,1fr)}
+header{flex-direction:column;align-items:flex-start}
+}
+/* ==========================================
+   MEDICARE STARTUP SPLASH
+   Does not change existing app features.
+========================================== */
+
+#medicareSplash{
+  position:fixed;
+  inset:0;
+  background:#172554;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  z-index:100000;
+  opacity:1;
+  visibility:visible;
+  transition:opacity .5s ease, visibility .5s ease;
+}
+
+#medicareSplash.hide{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.splash-content{
+  animation:splashContentIn .8s ease-out;
+}
+
+.splash-icon{
+  width:90px;
+  height:90px;
+  margin:0 auto 18px;
+  border-radius:24px;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+  animation:splashIconIn .9s ease-out;
+}
+
+.splash-content h1{
+  margin:0;
+  font-size:28px;
+}
+
+.splash-content p{
+  margin:9px 0 22px;
+  opacity:.85;
+  font-size:14px;
+}
+
+.splash-loader{
+  width:34px;
+  height:34px;
+  margin:auto;
+  border:3px solid rgba(255,255,255,.3);
+  border-top-color:white;
+  border-radius:50%;
+  animation:splashSpin .8s linear infinite;
+}
+
+@keyframes splashContentIn{
+  from{
+    opacity:0;
+    transform:translateY(15px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@keyframes splashIconIn{
+  0%{
+    opacity:0;
+    transform:scale(.5);
+  }
+  70%{
+    transform:scale(1.08);
+  }
+  100%{
+    opacity:1;
+    transform:scale(1);
+  }
+}
+
+@keyframes splashSpin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+</style>
+</head>
+
+<body>
+<!-- MEDICARE SPLASH SCREEN -->
+<div id="medicareSplash">
+  <div class="splash-content">
+    <div class="splash-icon">💊</div>
+    <h1>MediCare Reminder</h1>
+    <p>Your Smart Medication Companion</p>
+    <div class="splash-loader"></div>
+  </div>
+</div>
+
+<div id="welcome" class="page active">
+<div class="container"><div class="card">
+<h1>💊 MediCare Reminder</h1>
+<h2>Welcome</h2>
+<p>Choose an option to continue.</p>
+<div class="actions">
+<button onclick="page('create')">Create Account</button>
+<button class="gray" onclick="page('login')">Login</button>
+</div>
+</div></div>
+</div>
+
+<div id="create" class="page">
+<div class="container"><div class="card">
+<h2>📝 Create Account</h2>
+<label>Email</label>
+<input id="cEmail" type="email" placeholder="Enter email">
+<label>Password</label>
+<input id="cPassword" type="password" placeholder="Enter password">
+<label>Role</label>
+<select id="cRole">
+<option value="patient">Patient</option>
+<option value="caretaker">Caretaker</option>
+</select>
+<div id="cMsg"></div>
+<div class="actions">
+<button onclick="createAccount()">Create Account</button>
+<button class="gray" onclick="page('welcome')">Back</button>
+</div>
+</div></div>
+</div>
+
+<div id="login" class="page">
+<div class="container"><div class="card">
+<h2>🔐 Login</h2>
+<label>Email</label>
+<input id="lEmail" type="email" placeholder="Enter email">
+<label>Password</label>
+<input id="lPassword" type="password" placeholder="Enter password">
+<div id="lMsg"></div>
+<div class="actions">
+<button onclick="login()">Login</button>
+<button class="gray" onclick="page('welcome')">Back</button>
+</div>
+</div></div>
+</div>
+
+<div id="patientDetails" class="page">
+<div class="container"><div class="card">
+<h2>👤 Create Patient Profile</h2>
+<p>Please enter the patient's details to continue. You can edit these details later from Profile.</p>
+<label>Full Name</label><input id="patientName" placeholder="Enter full name">
+<label>Age</label><input id="patientAge" type="number" placeholder="Enter age">
+<label>Phone</label><input id="patientPhone" type="tel" placeholder="Enter phone number">
+<label>Emergency Contact</label><input id="patientEmergency" type="tel" placeholder="Emergency contact">
+<label>Caretaker Email</label>
+<input id="patientCaretakerEmail" type="email" placeholder="Enter caretaker's account email">
+<p class="small">The caretaker must have a MediCare caretaker account using this email.</p>
+<div id="patientDetailsMsg"></div>
+<div class="actions">
+<button onclick="savePatientDetails()">Save Patient Details</button>
+<button class="gray" onclick="page('welcome')">Back</button>
+</div>
+</div></div>
+</div>
+
+<div id="caretakerDetails" class="page">
+<div class="container"><div class="card">
+<h2>🧑‍⚕️ Create Caretaker Profile</h2>
+<p>Please enter the caretaker's details to continue. You can edit these details later from Profile.</p>
+<label>Full Name</label><input id="caretakerName" placeholder="Enter full name">
+<label>Age</label><input id="caretakerAge" type="number" placeholder="Enter age">
+<label>Phone</label><input id="caretakerPhone" type="tel" placeholder="Enter phone number">
+<label>Emergency Contact</label><input id="caretakerEmergency" type="tel" placeholder="Emergency contact">
+<div id="caretakerDetailsMsg"></div>
+<div class="actions">
+<button onclick="saveCaretakerDetails()">Save Caretaker Details</button>
+<button class="gray" onclick="page('welcome')">Back</button>
+</div>
+</div></div>
+</div>
+
+
+
+<!-- LOGOUT CONFIRMATION MODAL -->
+<div id="logoutConfirmModal" class="delete-modal-overlay" onclick="closeLogoutModal(event)">
+  <div class="delete-modal" onclick="event.stopPropagation()">
+    <div class="delete-icon" style="background:#dbeafe;color:#2563eb">🚪</div>
+    <h2>Logout from MediCare?</h2>
+    <p>Are you sure you want to logout from your account?</p>
+    <div class="delete-warning" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af">
+      ℹ️ You can login again anytime using your email and password.
+    </div>
+    <div class="delete-modal-actions">
+      <button class="cancel-delete" onclick="closeLogoutModal()">Cancel</button>
+      <button class="confirm-delete" style="background:#2563eb" onclick="confirmLogout()">Yes, Logout</button>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOM DELETE ACCOUNT MODAL -->
+<div id="deleteAccountModal" class="delete-modal-overlay" onclick="closeDeleteModal(event)">
+  <div class="delete-modal" onclick="event.stopPropagation()">
+    <div class="delete-icon">🗑️</div>
+    <h2>Delete your account?</h2>
+    <p>This will permanently delete your MediCare account.</p>
+
+    <div class="delete-warning">
+      ⚠️ Your profile and all of your medicine schedules will be deleted.
+      This action cannot be undone.
+    </div>
+
+    <label>Type <b>DELETE</b> to confirm</label>
+    <input id="deleteConfirmText" type="text" placeholder="Type DELETE">
+
+    <div id="deleteModalMsg"></div>
+
+    <div class="delete-modal-actions">
+      <button class="cancel-delete" onclick="closeDeleteModal()">Cancel</button>
+      <button class="confirm-delete" onclick="confirmDeleteAccount()">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITABLE PROFILE PAGE -->
+<div id="profile" class="page">
+<header>
+<h1>💊 MediCare — Profile</h1>
+<nav>
+<button class="gray" onclick="backToDashboard()">← Back to Dashboard</button>
+<button class="danger" onclick="logout()">Logout</button>
+</nav>
+</header>
+
+<div class="container">
+<div class="card">
+<h2>👤 My Profile</h2>
+<p class="small">Edit your profile information anytime after creating your account.</p>
+
+<div class="card" style="background:#f8fbff;box-shadow:none">
+<p><b>Account Email:</b> <span id="profileEmail"></span></p>
+<p><b>Role:</b> <span id="profileRole"></span></p>
+</div>
+
+<label>Full Name</label>
+<input id="profileName" placeholder="Enter full name">
+
+<label>Age</label>
+<input id="profileAge" type="number" placeholder="Enter age">
+
+<label>Phone</label>
+<input id="profilePhone" type="tel" placeholder="Enter phone number">
+
+<label>Emergency Contact</label>
+<input id="profileEmergency" type="tel" placeholder="Emergency contact">
+
+<div id="profileCaretakerField">
+<label>Caretaker Email</label>
+<input id="profileCaretakerEmail" type="email" placeholder="Enter caretaker's account email">
+<p class="small">For patients, this connects the patient to the caretaker dashboard.</p>
+</div>
+
+<div id="profileMsg"></div>
+
+<div class="actions">
+<button class="green" onclick="saveProfile()">💾 Save Changes</button>
+<button class="gray" onclick="backToDashboard()">Cancel</button>
+</div>
+
+<div id="patientReminderSettingsButton" class="card" style="background:#f8fbff;box-shadow:none">
+  <h3>🔔 Reminder Settings</h3>
+  <p class="small">Choose the sound you prefer for your medicine reminders.</p>
+  <button onclick="openReminderSettings()">⚙️ Reminder Settings</button>
+</div>
+
+<div class="actions">
+<button class="danger" onclick="deleteMyAccount()">🗑️ Delete My Account</button>
+</div>
+<p class="small">Deleting your account permanently removes your profile and your medicine schedules.</p>
+</div>
+</div>
+</div>
+
+
+<!-- PATIENT REMINDER SETTINGS -->
+<div id="reminderSettings" class="page">
+<header>
+<h1>🔔 Reminder Settings</h1>
+<nav>
+<button class="gray" onclick="openProfile()">← Back to Profile</button>
+</nav>
+</header>
+
+<div class="container">
+<div class="card">
+<h2>🔊 Medicine Alarm Sound</h2>
+<p class="small">
+Choose the sound that is easiest for you to notice.
+This setting affects patient medicine reminders only.
+</p>
+
+<label>Alarm Sound</label>
+<select id="alarmSound">
+  <option value="default">🔔 Default MediCare</option>
+  <option value="gentle">🎵 Gentle Bell</option>
+  <option value="loud">🚨 Loud Alarm</option>
+  <option value="chime">🔔 Soft Chime</option>
+  <option value="voice">🗣️ Voice Reminder</option>
+</select>
+
+<div class="card" style="background:#f8fbff;box-shadow:none">
+  <h3>📳 Vibration</h3>
+  <label>
+    <input id="alarmVibration" type="checkbox" style="width:auto" checked>
+    Vibration ON
+  </label>
+</div>
+
+<div class="actions">
+  <button onclick="testAlarmSound()">🔊 Test Sound</button>
+  <button class="green" onclick="saveReminderSettings()">💾 Save Settings</button>
+</div>
+
+<div id="reminderSettingsMsg"></div>
+
+<p class="small">
+💡 Tip: Choose a sound that you can easily hear while sleeping.
+</p>
+</div>
+</div>
+</div>
+
+<!-- PATIENT APPLICATION -->
+<div id="patientApp" class="page">
+<header>
+<h1>💊 MediCare — Patient</h1>
+<nav>
+<button onclick="patientSection('dashboard')">Dashboard</button>
+<button onclick="patientSection('schedule')">Add Medicine</button>
+<button class="gray" onclick="openProfile()">👤 Profile</button>
+<button class="danger" onclick="logout()">Logout</button>
+</nav>
+</header>
+
+<div class="container">
+
+<section id="patientDashboardSec">
+<div class="card">
+<h2>🙂 Patient Dashboard</h2>
+<div id="patientWelcome"></div>
+<span class="badge patient">PATIENT</span>
+</div>
+
+<div class="stats">
+<div class="stat">Total<h3 id="total">0</h3></div>
+<div class="stat">Pending<h3 id="pending">0</h3></div>
+<div class="stat">Taken<h3 id="taken">0</h3></div>
+<div class="stat">Missed<h3 id="missed">0</h3></div>
+</div>
+
+<div class="card">
+<h2>💊 My Medicine Schedules</h2>
+<div id="patientList"></div>
+</div>
+</section>
+
+<section id="patientScheduleSec" class="hidden">
+<div class="card">
+<h2>➕ Add Medicine Schedule</h2>
+
+<label>Medicine Name</label>
+<input id="medicine" placeholder="Enter medicine name">
+
+<label>Dosage</label>
+<input id="dose" placeholder="Example: 1 tablet">
+
+<label>Date From</label>
+<input id="dateFrom" type="date">
+
+<label>Date To</label>
+<input id="dateTo" type="date">
+
+<h3>Medicine Times</h3>
+
+<div class="timeRow">
+<label><input type="checkbox" id="morningCheck" onchange="toggleTime('morning')"> Morning</label>
+<input id="morningTime" type="time" disabled>
+</div>
+
+<div class="timeRow">
+<label><input type="checkbox" id="afternoonCheck" onchange="toggleTime('afternoon')"> Afternoon</label>
+<input id="afternoonTime" type="time" disabled>
+</div>
+
+<div class="timeRow">
+<label><input type="checkbox" id="nightCheck" onchange="toggleTime('night')"> Night</label>
+<input id="nightTime" type="time" disabled>
+</div>
+
+<label>Instructions</label>
+<input id="instruction" placeholder="Before food / After food">
+
+<div class="card" style="background:#f8fbff;box-shadow:none;border-left:5px solid #2563eb">
+  <h3>🔔 Reminder & Caretaker Alert</h3>
+  <p><b>1️⃣ First reminder:</b> At the scheduled medicine time.</p>
+  <p><b>2️⃣ Second reminder:</b> If there is no response for 15 minutes.</p>
+  <p><b>3️⃣ Caretaker notification:</b> If there is still no response for another 15 minutes.</p>
+  <p class="small"><b>Total:</b> Caretaker is notified 30 minutes after the scheduled time if the patient does not respond.</p>
+</div>
+
+<div id="sMsg"></div>
+<button class="green" onclick="addSchedule()">Save Medicine</button>
+</div>
+
+<div class="card">
+<h2>📋 My Schedules</h2>
+<div id="myList"></div>
+</div>
+</section>
+
+</div>
+</div>
+
+<!-- CARETAKER APPLICATION -->
+<div id="caretakerApp" class="page">
+<header>
+<h1>💊 MediCare — Caretaker</h1>
+<nav>
+<button onclick="caretakerSection('dashboard')">Dashboard</button>
+<button onclick="caretakerSection('patients')">Assigned Patients</button>
+<button class="gray" onclick="openProfile()">👤 Profile</button>
+<button class="danger" onclick="logout()">Logout</button>
+</nav>
+</header>
+
+<div class="container">
+
+<section id="caretakerDashboardSec">
+<div class="card">
+<h2>🧑‍⚕️ Caretaker Dashboard</h2>
+<div id="caretakerWelcome"></div>
+<span class="badge caretaker">CARETAKER</span>
+</div>
+
+<div class="stats">
+<div class="stat">Patients<h3 id="patientCount">0</h3></div>
+<div class="stat">Pending<h3 id="cpending">0</h3></div>
+<div class="stat">Taken<h3 id="ctaken">0</h3></div>
+<div class="stat">Missed<h3 id="cmissed">0</h3></div>
+</div>
+
+<div class="card">
+<h2>⚠️ Alerts</h2>
+<div id="alerts"></div>
+</div>
+
+<div class="card">
+<h2>👥 Assigned Patients</h2>
+<div id="dashboardPatients"></div>
+</div>
+</section>
+
+<section id="caretakerPatientsSec" class="hidden">
+<div class="card">
+<h2>👥 View Assigned Patients</h2>
+<p class="small">Select a patient to see that patient's medicine information and status.</p>
+<div id="assignedPatients"></div>
+</div>
+
+<div id="selectedPatientCard" class="card hidden">
+<h2 id="selectedPatientTitle">Patient Details</h2>
+<div id="selectedPatientInfo"></div>
+
+<div class="actions">
+<button onclick="callSelectedPatient()">📞 Call Patient</button>
+<button onclick="messageSelectedPatient()">💬 Send Message</button>
+</div>
+
+<h2>💊 Medicine Status</h2>
+<div id="selectedPatientSchedules"></div>
+</div>
+</section>
+
+</div>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+signOut, onAuthStateChanged, deleteUser
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import {
+getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs,
+query, where, updateDoc, deleteDoc, serverTimestamp, onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAUznYtzD9nAI8KHsxKkNs4_j9QloM_7nw",
+  authDomain: "medicare-reminder-c2368.firebaseapp.com",
+  projectId: "medicare-reminder-c2368",
+  storageBucket: "medicare-reminder-c2368.firebasestorage.app",
+  messagingSenderId: "1045102083535",
+  appId: "1:1045102083535:web:5ab35cf544d6bf022fe6ba",
+  measurementId: "G-ZHHR2FS1R4"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+
+// DUPLICATE EMAIL PROTECTION
+// Prevents creation of a second account for an email already registered.
+async function emailAlreadyRegistered(email) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  if (!normalizedEmail) return false;
+
+  try {
+    const snap = await getDocs(
+      query(collection(db, "users"), where("email", "==", normalizedEmail))
+    );
+    return !snap.empty;
+  } catch (err) {
+    console.error("Duplicate email check failed:", err);
+    // Fail closed: do not create an account if the duplicate check cannot be verified.
+    throw new Error("Unable to verify email. Please try again.");
+  }
+}
+
+
+
+
+let user = null;
+let role = "patient";
+let timer = null;
+let selectedPatient = null;
+
+
+const $ = id => document.getElementById(id);
+
+/* ==========================================
+   FCM PUSH NOTIFICATION TOKEN
+   Registers this Android phone with Firebase.
+   The token is saved in the logged-in user's
+   Firestore document so the backend can later
+   send a missed-dose alert to the caretaker.
+========================================== */
+
+
+/* ==========================================
+   PATIENT MEDICINE NOTIFICATION ACTIONS
+   Actions are handled without intentionally
+   opening the MediCare app.
+   ✅ I TOOK IT
+   ❌ NO
+========================================== */
+
+async function setupMedicineNotificationActions() {
+  try {
+    const Capacitor = window.Capacitor;
+    const LocalNotifications =
+      Capacitor?.Plugins?.LocalNotifications;
+
+    if(!LocalNotifications) {
+      console.log("Local Notifications plugin is not available yet.");
+      return;
+    }
+
+    const permission = await LocalNotifications.requestPermissions();
+
+    if(permission.display !== "granted") {
+      console.log("Medicine notification permission was not granted.");
+      return;
+    }
+
+    await LocalNotifications.registerActionTypes({
+      types: [
+        {
+          id: "MEDICINE_RESPONSE",
+          actions: [
+            {
+              id: "TOOK_IT",
+              title: "✅ I TOOK IT",
+              foreground: false
+            },
+            {
+              id: "NO",
+              title: "❌ NO",
+              foreground: false
+            }
+          ]
+        }
+      ]
+    });
+
+    LocalNotifications.addListener(
+      "localNotificationActionPerformed",
+      async action => {
+        const actionId = action.actionId;
+        const extra = action.notification?.extra || {};
+        const scheduleId = extra.scheduleId;
+
+        if(!scheduleId) return;
+
+        if (extra.reminderStage === "first" || extra.reminderStage === "second") {
+          speakMedicineReminderFiveTimes(
+            extra.medicineName || "your medicine",
+            extra.dosage || "",
+            extra.instructions || ""
+          );
+        }
+
+        if(actionId === "TOOK_IT") {
+          const scheduleSnap = await getDoc(doc(db,"schedules",scheduleId));
+
+          if(scheduleSnap.exists()) {
+            await cancelMedicineNotifications({
+              id:scheduleId,
+              ...scheduleSnap.data()
+            });
+          }
+
+          await updateDoc(
+            doc(db,"schedules",scheduleId),
+            {
+              status:"taken",
+              takenAt:serverTimestamp(),
+              patientResponse:"I took it",
+              responseAt:serverTimestamp(),
+              reminderStage:"completed"
+            }
+          );
+
+          await LocalNotifications.removeDeliveredNotifications({
+            notifications: [
+              { id: action.notification.id }
+            ]
+          }).catch(()=>{});
+
+          if(role === "patient") {
+            await loadSchedules();
+          }
+        }
+
+        if(actionId === "NO") {
+          await updateDoc(
+            doc(db,"schedules",scheduleId),
+            {
+              patientResponse:"No",
+              responseAt:serverTimestamp(),
+              reminderStage:"waiting_for_second_reminder"
+            }
+          );
+        }
+      }
+    );
+
+  } catch(e) {
+    console.error("Medicine notification action setup:",e);
+  }
+}
+
+async function scheduleSecondPatientReminder(
+  scheduleId,
+  medicineName,
+  dosage
+) {
+  try {
+    const LocalNotifications =
+      window.Capacitor?.Plugins?.LocalNotifications;
+
+    if(!LocalNotifications) return;
+
+    const permission = await LocalNotifications.checkPermissions();
+    if(permission.display !== "granted") return;
+
+    const id = makeNotificationId(scheduleId + "_SECOND");
+
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          id,
+          title: "🔔 MediCare — Second Reminder",
+          body: `You have not confirmed ${medicineName} ${dosage}. Please take your medicine.`,
+          schedule: {
+            at: new Date(Date.now() + 15 * 60 * 1000),
+            allowWhileIdle: true
+          },
+          actionTypeId: "MEDICINE_RESPONSE",
+          extra: {
+            scheduleId,
+            medicineName,
+            dosage,
+            reminderStage: "second"
+          }
+        }
+      ]
+    });
+  } catch(e) {
+    console.error("Second reminder scheduling failed:",e);
+  }
+}
+
+function makeNotificationId(value) {
+  let hash = 0;
+  const text = String(value);
+
+  for(let i=0;i<text.length;i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+
+  return Math.abs(hash) || Math.floor(Math.random()*100000000);
+}
+
+async function registerPushNotifications() {
+  try {
+    const Capacitor = window.Capacitor;
+
+    if (!Capacitor || !Capacitor.Plugins) {
+      console.log("Capacitor Push Notifications are available only in the native app.");
+      return;
+    }
+
+    const PushNotifications = Capacitor.Plugins.PushNotifications;
+
+    if (!PushNotifications) {
+      console.log("Push Notifications plugin is not available.");
+      return;
+    }
+
+    const permission = await PushNotifications.requestPermissions();
+
+    if (permission.receive !== "granted") {
+      console.log("Notification permission was not granted.");
+      return;
+    }
+
+    await PushNotifications.register();
+
+    PushNotifications.addListener("registration", async token => {
+      console.log("FCM token received:", token.value);
+
+      if (!user) return;
+
+      try {
+        await setDoc(
+          doc(db, "users", user.uid),
+          {
+            fcmToken: token.value,
+            notificationEnabled: true,
+            tokenUpdatedAt: serverTimestamp()
+          },
+          {merge:true}
+        );
+
+        console.log("FCM token saved to Firebase.");
+      } catch(e) {
+        console.error("Could not save FCM token:", e);
+      }
+    });
+
+    PushNotifications.addListener("registrationError", error => {
+      console.error("FCM registration error:", error);
+    });
+
+    PushNotifications.addListener("pushNotificationReceived", notification => {
+      console.log("Push notification received:", notification);
+    });
+
+  } catch(e) {
+    console.error("Push notification setup error:", e);
+  }
+}
+
+window.page = id => {
+  document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+  $(id).classList.add("active");
+};
+
+window.patientSection = async s => {
+  $("patientDashboardSec").classList.toggle("hidden", s !== "dashboard");
+  $("patientScheduleSec").classList.toggle("hidden", s !== "schedule");
+  if(s === "dashboard") await loadPatientData();
+  if(s === "schedule") await loadSchedules();
+};
+
+window.caretakerSection = async s => {
+  $("caretakerDashboardSec").classList.toggle("hidden", s !== "dashboard");
+  $("caretakerPatientsSec").classList.toggle("hidden", s !== "patients");
+  if(s === "dashboard") await loadCaretakerData();
+  if(s === "patients") await loadAssignedPatients();
+};
+
+function msg(id, text, ok=false) {
+  const x = $(id);
+  x.className = "msg " + (ok ? "ok" : "err");
+  x.innerText = text;
+}
+
+function clearMsg(id) {
+  $(id).className = "";
+  $(id).innerText = "";
+}
+
+window.createAccount = async () => {
+  const email = $("cEmail").value.trim().toLowerCase();
+  const password = $("cPassword").value;
+  const r = $("cRole").value;
+
+  if(!email || !password)
+    return msg("cMsg","Please enter email and password.");
+
+  if(password.length < 6)
+    return msg("cMsg","Password must contain at least 6 characters.");
+
+  try {
+    // Check Firestore first so an existing MediCare account
+    // cannot be created again with the same email.
+    const existingQuery = query(
+      collection(db, "users"),
+      where("email", "==", email)
+    );
+
+    const existingUsers = await getDocs(existingQuery);
+
+    if(!existingUsers.empty) {
+      return msg(
+        "cMsg",
+        "This email already has an account. Please Login."
+      );
+    }
+
+    // Firebase Authentication also independently prevents
+    // duplicate email accounts.
+    const cr = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    user = cr.user;
+    role = r;
+
+    // Save the account immediately.
+    // Caretakers do NOT need to fill a separate profile form during
+    // account creation. Their initial display name is their email.
+    if(r === "caretaker") {
+      await setDoc(doc(db,"users",user.uid),{
+        email,
+        role:"caretaker",
+        fullName:email,
+        createdAt:serverTimestamp()
+      });
+
+      msg(
+        "cMsg",
+        "Caretaker account created successfully! Login successful.",
+        true
+      );
+
+      setTimeout(async () => {
+        await openCorrectDashboard();
+      },700);
+
+    } else {
+
+      // Patients still complete their patient profile after account creation.
+      await setDoc(doc(db,"users",user.uid),{
+        email,
+        role:"patient",
+        createdAt:serverTimestamp()
+      });
+
+      msg(
+        "cMsg",
+        "Account created successfully!",
+        true
+      );
+
+      setTimeout(() => {
+        prepareDetailsPage();
+      },500);
+    }
+
+  } catch(e) {
+
+    msg(
+      "cMsg",
+      e.code === "auth/email-already-in-use"
+        ? "Email already in use. Please use Login."
+        : e.message
+    );
+  }
+};
+
+window.login = async () => {
+  const email = $("lEmail").value.trim();
+  const password = $("lPassword").value;
+
+  if(!email || !password) return msg("lMsg","Please enter email and password.");
+
+  try {
+    const cr = await signInWithEmailAndPassword(auth,email,password);
+    user = cr.user;
+
+    const s = await getDoc(doc(db,"users",user.uid));
+
+    if(!s.exists()) {
+  role = "patient";
+  prepareDetailsPage();
+  return;
+}
+
+    const data = s.data();
+    role = data.role || "patient";
+
+    /*
+      EXISTING ACCOUNT LOGIN:
+      Login asks only for email + password.
+      Do NOT send an existing account to the profile/details
+      form again. The saved profile information remains in
+      Firestore and is loaded by the dashboard/profile page.
+    */
+    msg("lMsg","Login successful!",true);
+    await openCorrectDashboard();
+  } catch(e) {
+    if(e.code === "auth/invalid-credential" || e.code === "auth/wrong-password")
+      msg("lMsg","Incorrect email or password.");
+    else if(e.code === "auth/user-not-found")
+      msg("lMsg","You don't have an account. Please create an account first.");
+    else if(e.code === "auth/invalid-email")
+      msg("lMsg","Please enter a valid email address.");
+    else
+      msg("lMsg",e.message);
+  }
+};
+
+function prepareDetailsPage(data={}) {
+  if(role === "caretaker") {
+    $("caretakerName").value = data.fullName || "";
+    $("caretakerAge").value = data.age || "";
+    $("caretakerPhone").value = data.phone || "";
+    $("caretakerEmergency").value = data.emergencyContact || "";
+    page("caretakerDetails");
+  } else {
+    $("patientName").value = data.fullName || "";
+    $("patientAge").value = data.age || "";
+    $("patientPhone").value = data.phone || "";
+    $("patientEmergency").value = data.emergencyContact || "";
+    $("patientCaretakerEmail").value = data.caretakerEmail || "";
+    page("patientDetails");
+  }
+}
+
+window.savePatientDetails = async () => {
+  if(!user) return;
+
+  const fullName = $("patientName").value.trim();
+  const age = $("patientAge").value;
+  const phone = $("patientPhone").value.trim();
+  const emergency = $("patientEmergency").value.trim();
+  const caretakerEmail = $("patientCaretakerEmail").value.trim().toLowerCase();
+
+  if(!fullName || !age || !phone)
+    return msg("patientDetailsMsg","Please enter your name, age and phone number.");
+  if(!caretakerEmail)
+    return msg("patientDetailsMsg","Please enter your caretaker's email.");
+
+  try {
+    const q = query(collection(db,"users"),
+      where("email","==",caretakerEmail),
+      where("role","==","caretaker"));
+    const result = await getDocs(q);
+
+    if(result.empty)
+      return msg("patientDetailsMsg",
+        "Caretaker account not found. Ask your caretaker to create an account first.");
+
+    await setDoc(doc(db,"users",user.uid),{
+      fullName, age:Number(age), phone,
+      emergencyContact:emergency,
+      caretakerEmail, email:user.email, role:"patient",
+      alarmSound:"default", alarmVibration:true
+    },{merge:true});
+
+    role = "patient";
+    msg("patientDetailsMsg","Details saved successfully!",true);
+
+    setTimeout(async () => { await openCorrectDashboard(); },500);
+  } catch(e) {
+    msg("patientDetailsMsg",e.message);
+  }
+};
+
+window.saveCaretakerDetails = async () => {
+  if(!user) return;
+
+  const fullName = $("caretakerName").value.trim();
+  const age = $("caretakerAge").value;
+  const phone = $("caretakerPhone").value.trim();
+  const emergency = $("caretakerEmergency").value.trim();
+
+  if(!fullName || !age || !phone)
+    return msg("caretakerDetailsMsg","Please enter your name, age and phone number.");
+
+  try {
+    await setDoc(doc(db,"users",user.uid),{
+      fullName, age:Number(age), phone,
+      emergencyContact:emergency,
+      email:user.email, role:"caretaker"
+    },{merge:true});
+
+    role = "caretaker";
+    msg("caretakerDetailsMsg","Details saved successfully!",true);
+
+    setTimeout(async () => { await openCorrectDashboard(); },500);
+  } catch(e) {
+    msg("caretakerDetailsMsg",e.message);
+  }
+};
+
+async function openCorrectDashboard() {
+  // Register the current Android device for FCM notifications.
+  // For the caretaker, this token is what the backend will use
+  // to deliver missed-dose alerts to this phone.
+  await registerPushNotifications();
+
+  // Register the patient medicine notification buttons.
+  await setupMedicineNotificationActions();
+  await prepareMedicineNotificationChannel();
+
+  if(role === "caretaker") {
+
+  await loadCaretakerProfile();
+  page("caretakerApp");
+  await loadCaretakerData();
+    startCaretakerRealtimeResponseListener();
+  startChecker();
+
+} else {
+  await registerPushNotifications();
+  await setupMedicineNotificationActions();
+  await prepareMedicineNotificationChannel();
+
+  await loadPatientProfile();
+  page("patientApp");
+  await loadPatientData();
+  startChecker();
+}
+}
+
+async function loadPatientProfile() {
+  if(!user) return;
+  const s = await getDoc(doc(db,"users",user.uid));
+  if(s.exists()) {
+    const d=s.data();
+    $("patientWelcome").innerHTML =
+      "<b>Welcome, "+safe(d.fullName || user.email)+"</b><p class='small'>"+safe(user.email)+"</p>";
+  }
+}
+
+async function loadCaretakerProfile() {
+  if(!user) return;
+  const s = await getDoc(doc(db,"users",user.uid));
+  if(s.exists()) {
+    const d=s.data();
+    $("caretakerWelcome").innerHTML =
+      "<b>Welcome, "+safe(d.fullName || user.email)+"</b><p class='small'>"+safe(user.email)+"</p>";
+  }
+}
+
+
+
+let reminderAudio = null;
+
+const reminderSoundFiles = {
+  default: "alarm.mp3",
+  gentle: "alarm.mp3",
+  loud: "alarm.mp3",
+  chime: "alarm.mp3",
+  voice: "alarm.mp3"
+};
+
+window.openReminderSettings = async () => {
+  if(!user || role !== "patient") return;
+
+  try {
+    const snap = await getDoc(doc(db,"users",user.uid));
+    const data = snap.exists() ? snap.data() : {};
+
+    $("alarmSound").value = data.alarmSound || "default";
+    $("alarmVibration").checked =
+      data.alarmVibration !== false;
+
+    clearMsg("reminderSettingsMsg");
+    page("reminderSettings");
+  } catch(e) {
+    msg("reminderSettingsMsg",e.message);
+  }
+};
+
+window.testAlarmSound = async () => {
+  const selected = $("alarmSound").value;
+  const file = reminderSoundFiles[selected];
+
+  try {
+    if(reminderAudio) {
+      reminderAudio.pause();
+      reminderAudio.currentTime = 0;
+    }
+
+    reminderAudio = new Audio(file);
+    reminderAudio.volume = 1.0;
+
+    await reminderAudio.play();
+
+    msg(
+      "reminderSettingsMsg",
+      "Playing the selected reminder sound. 🔊",
+      true
+    );
+  } catch(e) {
+    msg(
+      "reminderSettingsMsg",
+      "Sound file is not available yet. Add the selected MP3 file to the assets folder."
+    );
+  }
+};
+
+window.saveReminderSettings = async () => {
+  if(!user || role !== "patient") return;
+
+  try {
+    await setDoc(
+      doc(db,"users",user.uid),
+      {
+        alarmSound:$("alarmSound").value,
+        alarmVibration:$("alarmVibration").checked
+      },
+      {merge:true}
+    );
+
+    msg(
+      "reminderSettingsMsg",
+      "Reminder settings saved successfully! ✅",
+      true
+    );
+
+    setTimeout(() => openProfile(), 700);
+  } catch(e) {
+    msg("reminderSettingsMsg",e.message);
+  }
+};
+
+window.openProfile = async () => {
+  if(!user) return;
+
+  const s = await getDoc(doc(db,"users",user.uid));
+  const d = s.exists() ? s.data() : {};
+
+  $("profileEmail").innerText = user.email || d.email || "";
+  $("profileRole").innerText = role === "patient" ? "Patient" : "Caretaker";
+
+  $("profileName").value = d.fullName || "";
+  $("profileAge").value = d.age || "";
+  $("profilePhone").value = d.phone || "";
+  $("profileEmergency").value = d.emergencyContact || "";
+  $("profileCaretakerEmail").value = d.caretakerEmail || "";
+
+  $("profileCaretakerField").classList.toggle("hidden", role !== "patient");
+  $("patientReminderSettingsButton").classList.toggle("hidden", role !== "patient");
+  clearMsg("profileMsg");
+
+  page("profile");
+};
+
+window.saveProfile = async () => {
+  if(!user) return;
+
+  const fullName = $("profileName").value.trim();
+  const age = $("profileAge").value;
+  const phone = $("profilePhone").value.trim();
+  const emergency = $("profileEmergency").value.trim();
+  const caretakerEmail = $("profileCaretakerEmail").value.trim().toLowerCase();
+
+  if(!fullName || !age || !phone) {
+    return msg("profileMsg","Please enter your name, age and phone number.");
+  }
+
+  if(role === "patient") {
+    if(!caretakerEmail) {
+      return msg("profileMsg","Please enter your caretaker's email.");
+    }
+
+    try {
+      const q = query(
+        collection(db,"users"),
+        where("email","==",caretakerEmail),
+        where("role","==","caretaker")
+      );
+
+      const result = await getDocs(q);
+
+      if(result.empty) {
+        return msg("profileMsg","Caretaker account not found. Please check the email.");
+      }
+    } catch(e) {
+      return msg("profileMsg",e.message);
+    }
+  }
+
+  const updateData = {
+    fullName,
+    age:Number(age),
+    phone,
+    emergencyContact:emergency,
+    email:user.email,
+    role
+  };
+
+  if(role === "patient") {
+    updateData.caretakerEmail = caretakerEmail;
+  }
+
+  try {
+    await setDoc(doc(db,"users",user.uid),updateData,{merge:true});
+
+    msg("profileMsg","Profile updated successfully! ✅",true);
+
+    setTimeout(async () => {
+      await backToDashboard();
+    },700);
+
+  } catch(e) {
+    msg("profileMsg",e.message);
+  }
+};
+
+
+
+window.deleteMyAccount = () => {
+  if(!user) return;
+
+  $("deleteConfirmText").value = "";
+  clearMsg("deleteModalMsg");
+  $("deleteAccountModal").classList.add("show");
+
+  setTimeout(() => $("deleteConfirmText").focus(), 100);
+};
+
+window.closeDeleteModal = (event) => {
+  if(event && event.target !== $("deleteAccountModal")) return;
+  $("deleteAccountModal").classList.remove("show");
+  $("deleteConfirmText").value = "";
+  clearMsg("deleteModalMsg");
+};
+
+window.confirmDeleteAccount = async () => {
+  if(!user) return;
+
+  const confirmation = $("deleteConfirmText").value.trim();
+
+  if(confirmation !== "DELETE") {
+    return msg(
+      "deleteModalMsg",
+      "Please type DELETE exactly to confirm."
+    );
+  }
+
+  const deleteButton = document.querySelector(".confirm-delete");
+  deleteButton.disabled = true;
+  deleteButton.innerText = "Deleting...";
+
+  try {
+    // Delete all medicine schedules belonging to this account.
+    const scheduleQuery = query(
+      collection(db,"schedules"),
+      where("userId","==",user.uid)
+    );
+
+    const scheduleSnapshot = await getDocs(scheduleQuery);
+
+    for(const scheduleDoc of scheduleSnapshot.docs) {
+      await deleteDoc(
+        doc(db,"schedules",scheduleDoc.id)
+      );
+    }
+
+    // Delete the user's Firestore profile.
+    await deleteDoc(
+      doc(db,"users",user.uid)
+    );
+
+    // Delete the Firebase Authentication account.
+    await deleteUser(user);
+    stopCaretakerRealtimeResponseListener();
+
+    user = null;
+    selectedPatient = null;
+
+    if(timer) {
+      clearInterval(timer);
+      timer = null;
+    }
+
+    $("deleteAccountModal").classList.remove("show");
+
+    alert("Your MediCare account has been deleted successfully.");
+
+    page("welcome");
+
+  } catch(e) {
+    console.error("Delete account error:",e);
+
+    deleteButton.disabled = false;
+    deleteButton.innerText = "Delete Account";
+
+    if(e.code === "auth/requires-recent-login") {
+      msg(
+        "deleteModalMsg",
+        "For security, please log out, log in again, and then try deleting your account."
+      );
+    } else {
+      msg(
+        "deleteModalMsg",
+        "Account deletion failed: " + e.message
+      );
+    }
+  }
+};
+
+
+document.addEventListener("keydown", event => {
+  if(event.key === "Escape") {
+    const modal = $("deleteAccountModal");
+    if(modal && modal.classList.contains("show")) {
+      closeDeleteModal();
+      return;
+    }
+
+    const logoutModal = $("logoutConfirmModal");
+    if(logoutModal && logoutModal.classList.contains("show")) {
+      closeLogoutModal();
+    }
+  }
+});
+
+window.backToDashboard = async () => {
+  if(!user) {
+    page("welcome");
+    return;
+  }
+
+  if(role === "patient") {
+    page("patientApp");
+    await loadPatientData();
+  } else {
+    page("caretakerApp");
+    await loadCaretakerData();
+  }
+};
+
+
+window.toggleTime = period => {
+  const checkbox = $(period+"Check");
+  const input = $(period+"Time");
+  input.disabled = !checkbox.checked;
+  if(!checkbox.checked) input.value="";
+};
+
+async function ensureExactAlarmPermission() {
+  try {
+    const LocalNotifications =
+      window.Capacitor?.Plugins?.LocalNotifications;
+
+    if (!LocalNotifications) return false;
+
+    const result =
+      await LocalNotifications.checkExactNotificationSetting();
+
+    console.log("Exact alarm status:", result.exact_alarm);
+
+    if (result.exact_alarm !== "granted") {
+      const changed =
+        await LocalNotifications.changeExactNotificationSetting();
+
+      console.log("Exact alarm setting:", changed.exact_alarm);
+
+      return changed.exact_alarm === "granted";
+    }
+
+    return true;
+  } catch (e) {
+    console.log("Exact alarm check failed:", e);
+    return false;
+  }
+}
+async function prepareMedicineNotificationChannel() {
+  try {
+    const LocalNotifications =
+      window.Capacitor?.Plugins?.LocalNotifications;
+
+    if(!LocalNotifications) return false;
+
+    const permission = await LocalNotifications.requestPermissions();
+    if(permission.display !== "granted") {
+      console.log("Notification permission not granted.");
+      return false;
+    }
+
+    if(LocalNotifications.createChannel) {
+      await LocalNotifications.createChannel({
+        id:"medicine-reminders-v2",
+        name:"MediCare Medicine Reminders",
+        description:"Medicine reminder alarms and patient response buttons",
+        importance:5,
+        visibility:1,
+        sound:"alarm.mp3",
+        vibration:true
+      }).catch(e => console.log("Channel setup:",e));
+    }
+
+    return true;
+  } catch(e) {
+    console.error("Notification channel setup:",e);
+    return false;
+  }
+}
+
+function getScheduleNotificationTimes(dateString, selectedTime) {
+  const first = new Date(`${dateString}T${selectedTime.time}:00`);
+  if(isNaN(first.getTime())) return null;
+
+  const second = new Date(first.getTime() + 15 * 60 * 1000);
+
+  return { first, second };
+}
+
+
+/* ==========================================
+   VOICE MEDICINE REMINDER
+   One reminder notification + voice repeated 5 times.
+   Uses medicine name, dosage and food instruction
+   from the saved schedule.
+========================================== */
+function buildMedicineVoiceMessage(medicineName, dosage, instructions) {
+  const food = String(instructions || "").trim();
+
+  if (food) {
+    return `It is time to take ${medicineName}, ${dosage}, ${food}.`;
+  }
+
+  return `It is time to take ${medicineName}, ${dosage}.`;
+}
+
+function speakMedicineReminderFiveTimes(medicineName, dosage, instructions) {
+  if (!("speechSynthesis" in window)) return;
+
+  const message = buildMedicineVoiceMessage(
+    medicineName,
+    dosage,
+    instructions
+  );
+
+  window.speechSynthesis.cancel();
+
+  let count = 0;
+
+  const speakNext = () => {
+    if (count >= 5) return;
+
+    count++;
+
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    utterance.onend = () => {
+      setTimeout(speakNext, 300);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  speakNext();
+}
+
+
+async function scheduleMedicineNotifications(scheduleId, medicineName, dosage, instructions, dateFrom, dateTo, times) {
+  try {
+    const LocalNotifications =
+      window.Capacitor?.Plugins?.LocalNotifications;
+
+    if(!LocalNotifications) {
+      console.log("Local Notifications plugin unavailable.");
+      return [];
+    }
+    const exact = await LocalNotifications.checkExactNotificationSetting();
+
+    console.log("Exact alarm permission:", exact.exact_alarm);
+
+    if (exact.exact_alarm !== "granted") {
+      await LocalNotifications.changeExactNotificationSetting();
+      return [];
+}
+    const ready = await prepareMedicineNotificationChannel();
+    if(!ready) return [];
+
+    const notifications = [];
+    const notificationIds = [];
+
+    const start = new Date(`${dateFrom}T00:00:00`);
+    const end = new Date(`${dateTo}T23:59:59`);
+
+    for(let day = new Date(start); day <= end; day.setDate(day.getDate()+1)) {
+      const dateString =
+        `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,"0")}-${String(day.getDate()).padStart(2,"0")}`;
+
+      for(const t of times) {
+        const dueTimes = getScheduleNotificationTimes(dateString,t);
+        if(!dueTimes) continue;
+
+        const firstId = makeNotificationId(
+          `${scheduleId}_${dateString}_${t.period}_${t.time}_FIRST`
+        );
+
+        const secondId = makeNotificationId(
+          `${scheduleId}_${dateString}_${t.period}_${t.time}_SECOND`
+        );
+
+        const now = new Date();
+
+        // Only schedule future notifications.
+        if(dueTimes.first > now) {
+          notifications.push({
+            id:firstId,
+            title:"💊 MediCare Reminder",
+            body:`Time to take ${medicineName} — ${dosage}`,
+            schedule:{
+              at:dueTimes.first,
+              allowWhileIdle:true
+            },
+            channelId:"medicine-reminders-v2",
+            actionTypeId:"MEDICINE_RESPONSE",
+            extra:{
+              scheduleId,
+              medicineName,
+              dosage,
+              instructions,
+              reminderStage:"first",
+              date:dateString,
+              period:t.period,
+              time:t.time,
+              secondNotificationId:secondId
+            }
+          });
+          notificationIds.push(firstId);
+        }
+
+        // The second reminder is independently scheduled 15 minutes later.
+        // If the patient presses I TOOK IT, it is cancelled.
+        if(dueTimes.second > now) {
+          notifications.push({
+            id:secondId,
+            title:"🔔 MediCare — Second Reminder",
+            body:`No response yet. Please take ${medicineName} — ${dosage}`,
+            schedule:{
+              at:dueTimes.second,
+              allowWhileIdle:true
+            },
+            channelId:"medicine-reminders-v2",
+            actionTypeId:"MEDICINE_RESPONSE",
+            extra:{
+              scheduleId,
+              medicineName,
+              dosage,
+              instructions,
+              reminderStage:"second",
+              date:dateString,
+              period:t.period,
+              time:t.time
+            }
+          });
+          notificationIds.push(secondId);
+        }
+      }
+    }
+
+    if(notifications.length) {
+      await LocalNotifications.schedule({notifications});
+    }
+
+    return notificationIds;
+  } catch(e) {
+    console.error("Native medicine scheduling failed:",e);
+    throw e;
+  }
+}
+
+async function cancelMedicineNotifications(schedule) {
+  try {
+    const LocalNotifications =
+      window.Capacitor?.Plugins?.LocalNotifications;
+
+    if(!LocalNotifications) return;
+
+    const ids = schedule?.notificationIds || [];
+    if(!ids.length) return;
+
+    await LocalNotifications.cancel({
+      notifications: ids.map(id => ({id}))
+    });
+  } catch(e) {
+    console.error("Could not cancel medicine notifications:",e);
+  }
+}
+
+window.addSchedule = async () => {
+  if(!user) return;
+
+  if(!$("medicine").value.trim() || !$("dose").value.trim() ||
+     !$("dateFrom").value || !$("dateTo").value)
+    return msg("sMsg","Please enter medicine, dosage, date and date range.");
+
+  if($("dateTo").value < $("dateFrom").value)
+    return msg("sMsg","Date To cannot be before Date From.");
+
+  const selectedTimes=[];
+
+  for(const p of ["morning","afternoon","night"]) {
+    if($(p+"Check").checked) {
+      if(!$(p+"Time").value)
+        return msg("sMsg","Please enter "+p+" time.");
+      selectedTimes.push({
+        period:p.charAt(0).toUpperCase()+p.slice(1),
+        time:$(p+"Time").value
+      });
+    }
+  }
+
+  if(!selectedTimes.length)
+    return msg("sMsg","Please select at least one medicine time.");
+
+  try {
+    const profile = await getDoc(doc(db,"users",user.uid));
+    const pData = profile.exists() ? profile.data() : {};
+
+    const medicineName = $("medicine").value.trim();
+    const dosage = $("dose").value.trim();
+    const dateFrom = $("dateFrom").value;
+    const dateTo = $("dateTo").value;
+
+    const scheduleRef = await addDoc(collection(db,"schedules"),{
+      userId:user.uid,
+      userEmail:user.email,
+      patientName:pData.fullName || user.email,
+      caretakerEmail:pData.caretakerEmail || "",
+      medicineName,
+      dosage,
+      dateFrom,
+      dateTo,
+      times:selectedTimes,
+      instructions:$("instruction").value.trim(),
+      firstReminderAfterMinutes:0,
+      secondReminderAfterMinutes:15,
+      caretakerAlertAfterMinutes:30,
+      reminderStage:"waiting",
+      status:"pending",
+      notifiedKeys:[],
+      notificationIds:[],
+      createdAt:serverTimestamp()
+    });
+
+    try {
+      const notificationIds = await scheduleMedicineNotifications(
+        scheduleRef.id,
+        medicineName,
+        dosage,
+        $("instruction").value.trim(),
+        dateFrom,
+        dateTo,
+        selectedTimes
+      );
+
+      await updateDoc(doc(db,"schedules",scheduleRef.id),{
+        notificationIds,
+        notificationsScheduled:notificationIds.length > 0
+      });
+
+      if(notificationIds.length) {
+        msg("sMsg","Medicine saved. Android reminders are scheduled! 🔔",true);
+      } else {
+        msg("sMsg","Medicine saved, but Android notification permission/plugin is not ready.",false);
+      }
+    } catch(notificationError) {
+      console.error(notificationError);
+      msg("sMsg","Medicine saved, but the Android reminder could not be scheduled: " + notificationError.message);
+    }
+    clearScheduleForm();
+    await loadSchedules();
+  } catch(e) {
+    msg("sMsg",e.message);
+  }
+};
+
+function clearScheduleForm() {
+  ["medicine","dose","dateFrom","dateTo","morningTime","afternoonTime","nightTime","instruction"]
+    .forEach(id => $(id).value="");
+  ["morningCheck","afternoonCheck","nightCheck"].forEach(id => $(id).checked=false);
+  ["morningTime","afternoonTime","nightTime"].forEach(id => $(id).disabled=true);
+}
+
+async function getMySchedules() {
+  if(!user) return [];
+  const q=query(collection(db,"schedules"),where("userId","==",user.uid));
+  const s=await getDocs(q);
+  const a=[];
+  s.forEach(d=>a.push({id:d.id,...d.data()}));
+  a.sort((x,y)=>(x.dateFrom||"").localeCompare(y.dateFrom||""));
+  return a;
+}
+
+function missed(s) {
+  if(s.status==="taken" || !s.dateFrom || !s.dateTo || !s.times?.length) return false;
+
+  const now=new Date();
+  const today=now.toISOString().split("T")[0];
+
+  if(today<s.dateFrom || today>s.dateTo) return false;
+
+  return s.times.some(selected => {
+    if(!selected.time) return false;
+    const due=new Date(`${today}T${selected.time}`);
+    return !isNaN(due) && now-due > 30*60000;
+  });
+}
+
+function statusText(s) {
+  if(missed(s)) return "<span class='status-missed'>⚠️ Missed</span>";
+  if(s.status==="taken") return "<span class='status-taken'>✅ Taken</span>";
+  return "<span class='status-pending'>🟠 Pending</span>";
+}
+
+function scheduleCard(s,allowActions=true) {
+  return `
+  <div class="${missed(s) ? "alert" : "schedule"}">
+    <h3>💊 ${safe(s.medicineName)}</h3>
+    <p><b>Dosage:</b> ${safe(s.dosage)}</p>
+    <p><b>Date:</b> ${safe(s.dateFrom)} to ${safe(s.dateTo)}</p>
+    <p><b>Medicine Times:</b><br>
+      ${(s.times||[]).map(t=>`${safe(t.period)}: ${safe(t.time)}`).join("<br>")}
+    </p>
+    <p><b>Instructions:</b> ${safe(s.instructions || "Not specified")}</p>
+    <p><b>Reminder Flow:</b> First reminder → 15 min → second reminder → 15 min → caretaker notification</p>
+    <p><b>Status:</b> ${statusText(s)}</p>
+    ${allowActions ? `
+    <div class="actions">
+      ${s.status!=="taken"
+        ? `<button class="green" onclick="takenNow('${s.id}')">✅ Taken</button>`
+        : `<button class="gray" onclick="pendingNow('${s.id}')">🟠 Pending</button>`}
+      <button class="danger" onclick="removeNow('${s.id}')">Delete</button>
+    </div>` : ""}
+  </div>`;
+}
+
+async function loadSchedules() {
+  if(!user) return;
+  try {
+    const a=await getMySchedules();
+    renderPatientStats(a);
+    $("patientList").innerHTML=a.length ? a.map(x=>scheduleCard(x,true)).join("") :
+      "<div class='empty'>No medicine schedules added yet.</div>";
+    $("myList").innerHTML=$("patientList").innerHTML;
+  } catch(e) {
+    $("patientList").innerText=e.message;
+  }
+}
+
+async function loadPatientData() {
+  await loadPatientProfile();
+  await loadSchedules();
+}
+
+function renderPatientStats(a) {
+  const t=a.length;
+  const k=a.filter(x=>x.status==="taken").length;
+  const m=a.filter(missed).length;
+  $("total").innerText=t;
+  $("taken").innerText=k;
+  $("missed").innerText=m;
+  $("pending").innerText=Math.max(0,t-k-m);
+}
+
+window.takenNow=async id => {
+  const scheduleSnap = await getDoc(doc(db,"schedules",id));
+  if(scheduleSnap.exists()) {
+    await cancelMedicineNotifications({
+      id,
+      ...scheduleSnap.data()
+    });
+  }
+
+  await updateDoc(doc(db,"schedules",id),{
+    status:"taken",
+    takenAt:serverTimestamp(),
+    patientResponse:"I took it",
+    responseAt:serverTimestamp(),
+    reminderStage:"completed"
+  });
+
+  await loadSchedules();
+  if(role==="caretaker") await loadCaretakerData();
+};
+
+window.pendingNow=async id => {
+  await updateDoc(doc(db,"schedules",id),{
+    status:"pending",
+    notifiedKeys:[],
+    reminderStage:"waiting"
+  });
+  await loadSchedules();
+};
+
+window.removeNow=async id => {
+  if(!confirm("Delete this medicine schedule?")) return;
+  await deleteDoc(doc(db,"schedules",id));
+  await loadSchedules();
+};
+
+async function getAssignedPatients() {
+  if(!user || role!=="caretaker") return [];
+
+  const q=query(
+    collection(db,"users"),
+    where("caretakerEmail","==",user.email),
+    where("role","==","patient")
+  );
+
+  const s=await getDocs(q);
+  const patients=[];
+  s.forEach(d=>patients.push({id:d.id,...d.data()}));
+  patients.sort((a,b)=>(a.fullName||"").localeCompare(b.fullName||""));
+  return patients;
+}
+
+async function getPatientSchedules(patientId) {
+  const q=query(collection(db,"schedules"),where("userId","==",patientId));
+  const s=await getDocs(q);
+  const a=[];
+  s.forEach(d=>a.push({id:d.id,...d.data()}));
+  a.sort((x,y)=>(x.dateFrom||"").localeCompare(y.dateFrom||""));
+  return a;
+}
+
+async function loadAssignedPatients() {
+  const patients=await getAssignedPatients();
+
+  const html=patients.length ? patients.map(p=>`
+    <div class="patient-card ${selectedPatient?.id===p.id ? "selected":""}">
+      <h3>👤 ${safe(p.fullName || "Patient")}</h3>
+      <p><b>Age:</b> ${safe(p.age)}</p>
+      <p><b>Phone:</b> ${safe(p.phone)}</p>
+      <p><b>Email:</b> ${safe(p.email)}</p>
+      <button onclick="selectPatient('${p.id}')">View Patient</button>
+    </div>
+  `).join("") : "<div class='empty'>No assigned patients found.</div>";
+
+  $("assignedPatients").innerHTML=html;
+  $("dashboardPatients").innerHTML=html;
+  $("patientCount").innerText=patients.length;
+}
+
+window.selectPatient=async patientId => {
+  const patients=await getAssignedPatients();
+  selectedPatient=patients.find(p=>p.id===patientId);
+
+  if(!selectedPatient) return;
+
+  $("selectedPatientCard").classList.remove("hidden");
+  $("selectedPatientTitle").innerText="👤 "+(selectedPatient.fullName || "Patient");
+
+  $("selectedPatientInfo").innerHTML=`
+    <p><b>Age:</b> ${safe(selectedPatient.age)}</p>
+    <p><b>Phone:</b> ${safe(selectedPatient.phone)}</p>
+    <p><b>Email:</b> ${safe(selectedPatient.email)}</p>
+    <p><b>Emergency Contact:</b> ${safe(selectedPatient.emergencyContact || "Not provided")}</p>
+  `;
+
+  const schedules=await getPatientSchedules(patientId);
+
+  $("selectedPatientSchedules").innerHTML=schedules.length
+    ? schedules.map(x=>scheduleCard(x,false)).join("")
+    : "<div class='empty'>This patient has no medicine schedules.</div>";
+
+  caretakerSection("patients");
+  await loadAssignedPatients();
+  $("selectedPatientCard").classList.remove("hidden");
+};
+
+async function loadCaretakerData() {
+  await loadCaretakerProfile();
+  const patients=await getAssignedPatients();
+  $("patientCount").innerText=patients.length;
+
+  let all=[];
+  for(const p of patients) {
+    const schedules=await getPatientSchedules(p.id);
+    all.push(...schedules);
+  }
+
+  const k=all.filter(x=>x.status==="taken").length;
+  const m=all.filter(missed).length;
+
+  $("ctaken").innerText=k;
+  $("cmissed").innerText=m;
+  $("cpending").innerText=Math.max(0,all.length-k-m);
+
+  const missedSchedules=all.filter(missed);
+
+  $("alerts").innerHTML=missedSchedules.length
+    ? missedSchedules.map(x=>`
+      <div class="alert">
+        <b>⚠️ Missed Dose</b>
+        <p><b>Patient:</b> ${safe(x.patientName || x.userEmail || "Patient")}</p>
+        <p><b>Medicine:</b> ${safe(x.medicineName)} — ${safe(x.dosage)}</p>
+        <p><b>Times:</b><br>${(x.times||[]).map(t=>`${safe(t.period)}: ${safe(t.time)}`).join("<br>")}</p>
+      </div>`).join("")
+    : "<div class='empty'>No missed doses. ✅</div>";
+
+  await loadAssignedPatients();
+}
+
+
+// Friendly message for duplicate Firebase Authentication emails.
+function duplicateEmailMessage(error) {
+  const code = String(error?.code || "");
+  if (
+    code.includes("email-already-in-use") ||
+    code.includes("account-exists-with-different-credential") ||
+    error?.message === "EMAIL_ALREADY_REGISTERED"
+  ) {
+    return "Email already registered. Please Login.";
+  }
+  return null;
+}
+
+
+/* CARETAKER RESPONSE NOTIFICATION - FREE VERSION */
+
+/*
+  Caretaker notifications use the same native Local Notifications
+  function already used by the patient side.
+  This was missing in the previous caretaker version, so
+  notifyCaretaker(...) was undefined and no caretaker notification
+  could be shown.
+*/
+async function notifyCaretaker(title, body) {
+  try {
+    const LocalNotifications =
+      window.Capacitor?.Plugins?.LocalNotifications;
+
+    if (!LocalNotifications) {
+      console.error("Caretaker: Local Notifications plugin unavailable.");
+      return false;
+    }
+
+    const permission = await LocalNotifications.requestPermissions();
+    if (permission.display !== "granted") {
+      console.error("Caretaker: notification permission not granted.");
+      return false;
+    }
+
+    if (LocalNotifications.createChannel) {
+      await LocalNotifications.createChannel({
+        id: "caretaker-alerts-v2",
+        name: "Caretaker Alerts",
+        description: "Medication updates from the patient",
+        importance: 5,
+        visibility: 1,
+        sound: undefined,
+        vibration: true
+      }).catch(e => console.log("Caretaker channel:", e));
+    }
+
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: makeNotificationId(`caretaker_${Date.now()}_${title}_${body}`),
+        title,
+        body,
+        channelId: "caretaker-alerts-v2",
+        schedule: {
+          at: new Date(Date.now() + 500),
+          allowWhileIdle: true
+        },
+        extra: { caretaker: true }
+      }]
+    });
+
+    console.log("Caretaker notification scheduled:", title);
+    return true;
+  } catch (e) {
+    console.error("Caretaker notification error:", e);
+    return false;
+  }
+}
+
+let caretakerRealtimeUnsubscribe = null;
+
+function startCaretakerRealtimeResponseListener() {
+  if (!user || role !== "caretaker") return;
+
+  if (caretakerRealtimeUnsubscribe) {
+    caretakerRealtimeUnsubscribe();
+    caretakerRealtimeUnsubscribe = null;
+  }
+
+  const q = query(
+    collection(db, "schedules"),
+    where("caretakerEmail", "==", user.email)
+  );
+
+  caretakerRealtimeUnsubscribe = onSnapshot(q, async (snapshot) => {
+    for (const change of snapshot.docChanges()) {
+      if (change.type !== "modified") continue;
+
+      const schedule = { id: change.doc.id, ...change.doc.data() };
+
+      if (
+        schedule.patientResponse === "I took it" &&
+        schedule.caretakerResponseAlertSent !== "taken"
+      ) {
+        await notifyCaretaker(
+          "💊 MediCare — Medicine Update",
+          `${schedule.patientName || "Your patient"} has taken ${schedule.medicineName || "the tablet"} now.`
+        );
+
+        await updateDoc(
+          doc(db, "schedules", schedule.id),
+          { caretakerResponseAlertSent: "taken" }
+        );
+      }
+
+      if (
+        schedule.patientResponse === "No" &&
+        schedule.caretakerResponseAlertSent !== "no"
+      ) {
+        await notifyCaretaker(
+          "⚠️ MediCare — Patient Response",
+          `${schedule.patientName || "Your patient"} said NO for ${schedule.medicineName || "the medicine"}.`
+        );
+
+        await updateDoc(
+          doc(db, "schedules", schedule.id),
+          { caretakerResponseAlertSent: "no" }
+        );
+      }
+    }
+  }, (error) => {
+    console.error("Caretaker realtime listener:", error);
+  });
+}
+
+function stopCaretakerRealtimeResponseListener() {
+  if (caretakerRealtimeUnsubscribe) {
+    caretakerRealtimeUnsubscribe();
+    caretakerRealtimeUnsubscribe = null;
+  }
+}
+
+async function checkCaretakerResponseAlerts() {
+  if (!user || role !== "caretaker") return;
+
+  try {
+    const patients = await getAssignedPatients();
+
+    for (const patient of patients) {
+
+      const schedules = await getPatientSchedules(patient.id);
+
+      for (const schedule of schedules) {
+
+        // Alert when patient pressed I TOOK IT
+        if (
+          schedule.patientResponse === "I took it" &&
+          schedule.caretakerResponseAlertSent !== "taken"
+        ) {
+
+          await notifyCaretaker(
+            "💊 MediCare — Medicine Update",
+            `${patient.fullName || "Patient"} took ${schedule.medicineName}.`
+          );
+
+          await updateDoc(
+            doc(db, "schedules", schedule.id),
+            {
+              caretakerResponseAlertSent: "taken"
+            }
+          );
+        }
+
+        // Alert when patient pressed NO
+        if (
+          schedule.patientResponse === "No" &&
+          schedule.caretakerResponseAlertSent !== "no"
+        ) {
+
+          await notifyCaretaker(
+            "⚠️ MediCare — Patient Response",
+            `${patient.fullName || "Patient"} said NO for ${schedule.medicineName}.`
+          );
+
+          await updateDoc(
+            doc(db, "schedules", schedule.id),
+            {
+              caretakerResponseAlertSent: "no"
+            }
+          );
+        }
+
+        // Alert when patient did not respond for 30 minutes
+        if (
+          schedule.caretakerAlertDue === true &&
+          schedule.caretakerResponseAlertSent !== "missed"
+        ) {
+
+          await notifyCaretaker(
+            "🚨 MediCare — Missed Medicine",
+            `${patient.fullName || "Patient"} has not confirmed ${schedule.medicineName}.`
+          );
+
+          await updateDoc(
+            doc(db, "schedules", schedule.id),
+            {
+              caretakerResponseAlertSent: "missed"
+            }
+          );
+        }
+      }
+    }
+
+  } catch (e) {
+    console.error("Caretaker response checker:", e);
+  }
+}
+window.callSelectedPatient=()=>{
+  if(!selectedPatient?.phone) return alert("Patient phone number is not available.");
+  window.location.href="tel:"+selectedPatient.phone;
+};
+
+window.messageSelectedPatient=()=>{
+  if(!selectedPatient?.phone) return alert("Patient phone number is not available.");
+  window.location.href="sms:"+selectedPatient.phone;
+};
+
+
+function getDoseState(schedule, selectedTime) {
+  if(!schedule || !selectedTime) return null;
+
+  const today = new Date().toISOString().split("T")[0];
+  const due = new Date(`${today}T${selectedTime.time}`);
+  if(isNaN(due)) return null;
+
+  const now = new Date();
+  const elapsedMinutes = (now - due) / 60000;
+
+  if(elapsedMinutes < 0) return "upcoming";
+  if(elapsedMinutes < 15) return "first_waiting";
+  if(elapsedMinutes < 30) return "second_reminder";
+  return "caretaker_alert_due";
+}
+
+/*
+  Reminder policy:
+  0 min  -> first patient reminder
+  15 min -> second patient reminder
+  30 min -> caretaker notification
+  Any patient response before 30 min -> stop the sequence.
+*/
+async function processReminderStage(schedule, selectedTime) {
+  const state = getDoseState(schedule, selectedTime);
+  if(!state || state === "upcoming" || schedule.status === "taken") return;
+
+  const today = new Date().toISOString().split("T")[0];
+  const doseKey = `${today}_${selectedTime.period}_${selectedTime.time}`;
+  const stageKey = `${doseKey}_${state}`;
+  const notifiedStages = schedule.notifiedStages || [];
+
+  if(notifiedStages.includes(stageKey)) return;
+
+ if(state === "first_waiting") {
+  await updateDoc(doc(db,"schedules",schedule.id),{
+    notifiedStages:[...notifiedStages,stageKey],
+    reminderStage:"first_reminder_sent"
+  });
+}
+
+  if(state === "second_reminder") {
+    await notify(
+      "🔔 MediCare — Second Reminder",
+      `No response yet: ${schedule.medicineName} - ${schedule.dosage}.`,
+      {
+        scheduleId:schedule.id,
+        medicineName:schedule.medicineName,
+        dosage:schedule.dosage,
+        reminderStage:"second"
+      }
+    );
+
+
+    await updateDoc(doc(db,"schedules",schedule.id),{
+      notifiedStages:[...notifiedStages,stageKey],
+      reminderStage:"second_reminder_sent"
+    });
+  }
+
+  /*
+    At 30 minutes the backend/FCM must send the real caretaker
+    notification. We mark it as due here; the actual caretaker
+    push will be implemented by the Firebase backend.
+  */
+  if(state === "caretaker_alert_due") {
+    await updateDoc(doc(db,"schedules",schedule.id),{
+      reminderStage:"caretaker_alert_due",
+      caretakerAlertDue:true
+    });
+  }
+}
+
+async function checkMedicines() {
+  if(!user || role!=="patient") return;
+
+  try {
+    const schedules=await getMySchedules();
+    const today=new Date().toISOString().split("T")[0];
+
+    for(const s of schedules) {
+      if(!s.times?.length || !s.dateFrom || !s.dateTo) continue;
+      if(today<s.dateFrom || today>s.dateTo) continue;
+      if(s.status==="taken") continue;
+
+      for(const selected of s.times) {
+        if(!selected.time) continue;
+        await processReminderStage(s,selected);
+      }
+    }
+
+    await loadSchedules();
+  } catch(e) {
+    console.log("Reminder checker:",e);
+  }
+}
+
+async function notify(title,body,extra={}) {
+  try {
+    const LocalNotifications =
+      window.Capacitor?.Plugins?.LocalNotifications;
+
+    if(LocalNotifications) {
+      const permission = await LocalNotifications.checkPermissions();
+
+      if(permission.display === "granted") {
+        const id = makeNotificationId(
+          `${Date.now()}_${title}_${body}`
+        );
+
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id,
+              title,
+              body,
+              schedule: {
+                at: new Date(Date.now() + 1000),
+                allowWhileIdle: true
+              },
+              actionTypeId: "MEDICINE_RESPONSE",
+              extra
+            }
+          ]
+        });
+
+        return;
+      }
+    }
+
+    // Browser fallback.
+    if("Notification" in window) {
+      if(Notification.permission==="default")
+        await Notification.requestPermission();
+
+      if(Notification.permission==="granted")
+        new Notification(title,{body});
+    }
+  } catch(e) {
+    console.error("Notification error:",e);
+
+    try {
+      if("Notification" in window &&
+         Notification.permission==="granted") {
+        new Notification(title,{body});
+      }
+    } catch(_) {}
+  }
+}
+
+function safe(v) {
+  return String(v ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+async function cancelAllScheduledMedicineNotifications() {
+  try {
+    const LocalNotifications =
+      window.Capacitor?.Plugins?.LocalNotifications;
+
+    if (!LocalNotifications) return;
+
+    const pending = await LocalNotifications.getPending();
+
+    if (pending?.notifications?.length) {
+      await LocalNotifications.cancel({
+        notifications: pending.notifications.map(n => ({
+          id: n.id
+        }))
+      });
+
+      console.log("All scheduled medicine notifications cancelled.");
+    }
+  } catch (e) {
+    console.error("Could not cancel scheduled notifications:", e);
+  }
+}
+
+/* ==========================================
+   LOGOUT CONFIRMATION
+========================================== */
+window.logout = () => {
+  if(!user) return;
+  $("logoutConfirmModal").classList.add("show");
+};
+
+window.closeLogoutModal = (event) => {
+  if(event && event.target !== $("logoutConfirmModal")) return;
+  $("logoutConfirmModal").classList.remove("show");
+};
+
+window.confirmLogout = async () => {
+  if(!user) return;
+
+  const button = $("logoutConfirmModal").querySelector(".confirm-delete");
+  button.disabled = true;
+  button.innerText = "Logging out...";
+  if (role === "patient") {
+    await cancelAllScheduledMedicineNotifications();
+}
+
+  try {
+    if(timer) {
+      clearInterval(timer);
+      timer = null;
+    }
+
+    await signOut(auth);
+
+    user = null;
+    role = "";
+    selectedPatient = null;
+
+    $("logoutConfirmModal").classList.remove("show");
+    if($("lEmail")) $("lEmail").value = "";
+    if($("lPassword")) $("lPassword").value = "";
+    clearMsg("lMsg");
+    page("welcome");
+  } catch(e) {
+    console.error("Logout error:", e);
+    button.disabled = false;
+    button.innerText = "Yes, Logout";
+    alert("Logout failed: " + (e.message || e));
+  }
+};
+
+/* ==========================================
+   KEEP USER LOGGED IN
+   Firebase restores the session when the app
+   is closed/reopened. The user remains logged
+   in until Logout is pressed.
+========================================== */
+
+onAuthStateChanged(auth, async (u) => {
+  if(u) {
+    user = u;
+
+    try {
+      const snap = await getDoc(doc(db, "users", u.uid));
+
+      if(snap.exists()) {
+        const data = snap.data();
+        role = data.role || "patient";
+
+        // Restore the correct dashboard automatically.
+        if(role === "patient") {
+          page("patientApp");
+          await loadPatientData();
+        } else {
+          page("caretakerApp");
+          await loadCaretakerData();
+          // Reconnect caretaker response notifications after app restart.
+          startCaretakerRealtimeResponseListener();
+        }
+
+        // Restore notification functionality for this device.
+        await registerPushNotifications();
+        await setupMedicineNotificationActions();
+        await prepareMedicineNotificationChannel();
+
+      } else {
+        // Account exists but profile has not been completed.
+        role = "patient";
+        prepareDetailsPage();
+      }
+
+    } catch(e) {
+      console.error("Could not restore login session:", e);
+      page("welcome");
+    }
+
+  } else {
+    // This happens after Logout.
+    user = null;
+    role = "";
+    selectedPatient = null;
+    page("welcome");
+  }
+  const splash = document.getElementById("medicareSplash");
+
+  if(splash){
+    setTimeout(() => {
+      splash.classList.add("hide");
+    }, 400);
+  }
+});
+
+</script>
+</body>
+</html>

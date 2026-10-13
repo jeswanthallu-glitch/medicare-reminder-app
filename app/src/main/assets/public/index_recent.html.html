@@ -1,0 +1,2202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MediCare Reminder</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    margin:0;
+    background:#f4f7fb;
+    color:#172033;
+}
+
+header{
+    background:#172554;
+    color:white;
+    padding:15px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+header h1{
+    margin:0;
+    font-size:21px;
+}
+
+nav{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+}
+
+button{
+    border:0;
+    border-radius:6px;
+    padding:9px 13px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+}
+
+.danger{
+    background:#dc2626;
+}
+
+.green{
+    background:#16a34a;
+}
+
+.gray{
+    background:#64748b;
+}
+
+.container{
+    max-width:950px;
+    margin:auto;
+    padding:18px;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    margin:12px 0;
+    border-radius:12px;
+    box-shadow:0 2px 9px #0001;
+}
+
+input,select{
+    width:100%;
+    padding:11px;
+    margin:5px 0 12px;
+    border:1px solid #cbd5e1;
+    border-radius:6px;
+}
+
+label{
+    font-weight:bold;
+}
+
+.msg{
+    padding:8px;
+    margin:8px 0;
+    border-radius:6px;
+}
+
+.err{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.ok{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.actions{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+}
+
+.hidden{
+    display:none!important;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+}
+
+.stat{
+    background:#fff;
+    padding:12px;
+    text-align:center;
+    border-radius:10px;
+    box-shadow:0 2px 7px #0001;
+}
+
+.stat h3{
+    font-size:24px;
+    margin:6px;
+}
+
+.schedule{
+    background:#f8fbff;
+    border-left:5px solid #2563eb;
+    padding:12px;
+    margin:10px 0;
+    border-radius:7px;
+}
+
+.alert{
+    background:#fff1f2;
+    border-left:5px solid #dc2626;
+    padding:12px;
+    margin:10px 0;
+}
+
+.small{
+    color:#64748b;
+    font-size:13px;
+}
+
+@media(max-width:650px){
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- =========================
+     FIRST PAGE
+========================= -->
+
+<div id="welcome" class="page active">
+
+<div class="container">
+
+<div class="card">
+
+<h1>💊 MediCare Reminder</h1>
+
+<h2>Welcome</h2>
+
+<p>Choose an option to continue.</p>
+
+<div class="actions">
+
+<button onclick="page('create')">
+Create Account
+</button>
+
+<button class="gray" onclick="page('login')">
+Login
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =========================
+     CREATE ACCOUNT PAGE
+========================= -->
+
+<div id="create" class="page">
+
+<div class="container">
+
+<div class="card">
+
+<h2>📝 Create Account</h2>
+
+<label>Email</label>
+
+<input
+id="cEmail"
+type="email"
+placeholder="Enter email"
+>
+
+<label>Password</label>
+
+<input
+id="cPassword"
+type="password"
+placeholder="Enter password"
+>
+
+<label>Role</label>
+
+<select id="cRole">
+
+<option value="patient">
+Patient
+</option>
+
+<option value="caretaker">
+Caretaker
+</option>
+
+</select>
+
+<div id="cMsg"></div>
+
+<div class="actions">
+
+<button onclick="createAccount()">
+Create Account
+</button>
+
+<button class="gray" onclick="page('welcome')">
+Back
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =========================
+     LOGIN PAGE
+========================= -->
+
+<div id="login" class="page">
+
+<div class="container">
+
+<div class="card">
+
+<h2>🔐 Login</h2>
+
+<label>Email</label>
+
+<input
+id="lEmail"
+type="email"
+placeholder="Enter email"
+>
+
+<label>Password</label>
+
+<input
+id="lPassword"
+type="password"
+placeholder="Enter password"
+>
+
+<div id="lMsg"></div>
+
+<div class="actions">
+
+<button onclick="login()">
+Login
+</button>
+
+<button class="gray" onclick="page('welcome')">
+Back
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =========================
+     USER DETAILS PAGE
+========================= -->
+
+<div id="details" class="page">
+
+<div class="container">
+
+<div class="card">
+
+<h2>👤 Your Details</h2>
+
+<p>
+Please enter your details to continue.
+</p>
+
+<label>Full Name</label>
+
+<input
+id="name"
+placeholder="Enter full name"
+>
+
+<label>Age</label>
+
+<input
+id="age"
+type="number"
+placeholder="Enter age"
+>
+
+<label>Phone</label>
+
+<input
+id="phone"
+type="tel"
+placeholder="Enter phone number"
+>
+
+<label>Emergency Contact</label>
+
+<input
+id="emergency"
+type="tel"
+placeholder="Emergency contact"
+>
+
+<div id="dMsg"></div>
+
+<button onclick="saveDetails()">
+Save Details
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =========================
+     MAIN APPLICATION
+========================= -->
+
+<div id="app" class="page">
+
+<header>
+
+<h1>
+💊 MediCare Reminder
+</h1>
+
+<nav>
+
+<button onclick="section('patient')">
+Patient
+</button>
+
+<button onclick="section('schedule')">
+Add Schedule
+</button>
+
+<button onclick="section('caretaker')">
+Caretaker
+</button>
+
+<button class="danger" onclick="logout()">
+Logout
+</button>
+
+</nav>
+
+</header>
+
+
+<div class="container">
+
+
+<!-- =========================
+     PATIENT
+========================= -->
+
+<section id="patientSec">
+
+<div class="card">
+
+<h2>
+🙂 Patient Dashboard
+</h2>
+
+<div id="welcomeUser"></div>
+
+</div>
+
+
+<div class="stats">
+
+<div class="stat">
+
+Total
+
+<h3 id="total">
+0
+</h3>
+
+</div>
+
+
+<div class="stat">
+
+Pending
+
+<h3 id="pending">
+0
+</h3>
+
+</div>
+
+
+<div class="stat">
+
+Taken
+
+<h3 id="taken">
+0
+</h3>
+
+</div>
+
+
+<div class="stat">
+
+Missed
+
+<h3 id="missed">
+0
+</h3>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+💊 Medicine Schedules
+</h2>
+
+<div id="patientList"></div>
+
+</div>
+
+</section>
+
+
+<!-- =========================
+     ADD SCHEDULE
+========================= -->
+
+<section id="scheduleSec" class="hidden">
+
+<div class="card">
+
+<h2>➕ Add Medicine Schedule</h2>
+
+<label>Medicine Name</label>
+<input
+    id="medicine"
+    placeholder="Enter medicine name"
+>
+
+<label>Dosage</label>
+<input
+    id="dose"
+    placeholder="Example: 1 tablet"
+>
+
+<label>Date From</label>
+<input
+    id="dateFrom"
+    type="date"
+>
+
+<label>Date To</label>
+<input
+    id="dateTo"
+    type="date"
+>
+
+<h3>Medicine Times</h3>
+
+<!-- MORNING -->
+<div class="timeRow">
+    <label>
+        <input
+            type="checkbox"
+            id="morningCheck"
+            onchange="toggleTime('morning')"
+        >
+        Morning
+    </label>
+
+    <input
+        id="morningTime"
+        type="time"
+        disabled
+    >
+</div>
+
+<!-- AFTERNOON -->
+<div class="timeRow">
+    <label>
+        <input
+            type="checkbox"
+            id="afternoonCheck"
+            onchange="toggleTime('afternoon')"
+        >
+        Afternoon
+    </label>
+
+    <input
+        id="afternoonTime"
+        type="time"
+        disabled
+    >
+</div>
+
+<!-- NIGHT -->
+<div class="timeRow">
+    <label>
+        <input
+            type="checkbox"
+            id="nightCheck"
+            onchange="toggleTime('night')"
+        >
+        Night
+    </label>
+
+    <input
+        id="nightTime"
+        type="time"
+        disabled
+    >
+</div>
+
+<label>Instructions</label>
+
+<input
+    id="instruction"
+    placeholder="Before food / After food"
+>
+
+<div id="sMsg"></div>
+
+<button
+    class="green"
+    onclick="addSchedule()"
+>
+    Save Medicine
+</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>📋 My Schedules</h2>
+
+<div id="myList"></div>
+
+</div>
+
+</section>
+
+
+<!-- =========================
+     CARETAKER
+========================= -->
+
+<section id="caretakerSec" class="hidden">
+
+<div class="card">
+
+<h2>
+🧑‍⚕️ Caretaker Dashboard
+</h2>
+
+
+<div class="stats">
+
+<div class="stat">
+
+Total
+
+<h3 id="ctotal">
+0
+</h3>
+
+</div>
+
+
+<div class="stat">
+
+Pending
+
+<h3 id="cpending">
+0
+</h3>
+
+</div>
+
+
+<div class="stat">
+
+Taken
+
+<h3 id="ctaken">
+0
+</h3>
+
+</div>
+
+
+<div class="stat">
+
+Missed
+
+<h3 id="cmissed">
+0
+</h3>
+
+</div>
+
+</div>
+
+
+<h2>
+⚠️ Missed Dose Alerts
+</h2>
+
+<div id="alerts"></div>
+
+
+<h2>
+📋 All Medicine Schedules
+</h2>
+
+<div id="allSchedules"></div>
+
+</div>
+
+</section>
+
+
+</div>
+
+</div>
+
+
+<!-- =========================
+     JAVASCRIPT + FIREBASE
+========================= -->
+
+<script type="module">
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+
+import {
+getAuth,
+createUserWithEmailAndPassword,
+signInWithEmailAndPassword,
+signOut,
+onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+import {
+getFirestore,
+doc,
+setDoc,
+getDoc,
+collection,
+addDoc,
+getDocs,
+query,
+where,
+updateDoc,
+deleteDoc,
+serverTimestamp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+
+/* ==========================================
+   FIREBASE CONFIGURATION
+
+   WE WILL REPLACE THESE VALUES LATER
+========================================== */
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAUznYtzD9nAI8KHsxKkNs4_j9QloM_7nw",
+  authDomain: "medicare-reminder-c2368.firebaseapp.com",
+  projectId: "medicare-reminder-c2368",
+  storageBucket: "medicare-reminder-c2368.firebasestorage.app",
+  messagingSenderId: "1045102083535",
+  appId: "1:1045102083535:web:5ab35cf544d6bf022fe6ba",
+  measurementId: "G-ZHHR2FS1R4"
+};
+
+
+const firebaseApp =
+initializeApp(firebaseConfig);
+
+
+const auth =
+getAuth(firebaseApp);
+
+
+const db =
+getFirestore(firebaseApp);
+
+
+let user = null;
+
+let role = "patient";
+
+let timer = null;
+
+
+
+/* ==========================================
+   PAGE NAVIGATION
+========================================== */
+
+window.page = function(id){
+
+document
+.querySelectorAll(".page")
+.forEach(
+x => x.classList.remove("active")
+);
+
+document
+.getElementById(id)
+.classList.add("active");
+
+};
+
+
+
+/* ==========================================
+   MAIN SECTION NAVIGATION
+========================================== */
+
+window.section = async function(s){
+
+patientSec.classList.toggle(
+"hidden",
+s !== "patient"
+);
+
+scheduleSec.classList.toggle(
+"hidden",
+s !== "schedule"
+);
+
+caretakerSec.classList.toggle(
+"hidden",
+s !== "caretaker"
+);
+
+
+if(s === "caretaker"){
+
+await loadCaretaker();
+
+}
+else{
+
+awaitloadSchedules();
+
+}
+
+};
+
+
+
+/* ==========================================
+   MESSAGE
+========================================== */
+
+function msg(id,text,ok=false){
+
+const x =
+document.getElementById(id);
+
+x.className =
+"msg " + (ok ? "ok" : "err");
+
+x.innerText = text;
+
+}
+
+
+
+/* ==========================================
+   CREATE ACCOUNT
+========================================== */
+const cEmail =document.getElementById("cEmail");
+const cPassword =document.getElementById("cPassword");
+const cRole =document.getElementById("cRole");
+window.createAccount = async function(){
+
+const email =
+cEmail.value.trim();
+
+const password =
+cPassword.value;
+
+const r =
+cRole.value;
+
+
+if(!email || !password){
+
+msg(
+"cMsg",
+"Please enter email and password."
+);
+
+return;
+
+}
+
+
+if(password.length < 6){
+
+msg(
+"cMsg",
+"Password must contain at least 6 characters."
+);
+
+return;
+
+}
+
+
+try{
+
+const cr =
+await createUserWithEmailAndPassword(
+auth,
+email,
+password
+);
+
+
+user =
+cr.user;
+
+role =
+r;
+
+
+await setDoc(
+doc(db,"users",user.uid),
+{
+
+email:email,
+
+role:role,
+
+createdAt:
+serverTimestamp()
+
+}
+);
+
+
+msg(
+"cMsg",
+"Account created successfully!",
+true
+);
+
+
+setTimeout(
+() => page("details"),
+500
+);
+
+
+}
+
+catch(e){
+
+msg(
+"cMsg",
+e.code === "auth/email-already-in-use"
+?
+"Email already in use. Please use Login."
+:
+e.message
+);
+
+}
+
+};
+
+
+
+/* ==========================================
+   LOGIN
+========================================== */
+
+window.login = async function(){
+
+const email =
+lEmail.value.trim();
+
+const password =
+lPassword.value;
+
+
+if(!email || !password){
+
+msg(
+"lMsg",
+"Please enter email and password."
+);
+
+return;
+
+}
+
+
+try{
+
+const cr =
+await signInWithEmailAndPassword(
+auth,
+email,
+password
+);
+
+
+user =
+cr.user;
+
+
+const s =
+await getDoc(
+doc(db,"users",user.uid)
+);
+
+
+role =
+s.exists()
+?
+s.data().role || "patient"
+:
+"patient";
+
+
+msg(
+"lMsg",
+"Login successful!",
+true
+);
+
+
+setTimeout(
+async () => {
+
+page("app");
+
+section(
+role === "caretaker"
+?
+"caretaker"
+:
+"patient"
+);
+
+await loadDetails();
+if (role === "patient") {
+    await loadSchedules();
+}
+
+startChecker();
+
+},
+500
+);
+
+
+}
+
+catch(e){
+
+if(e.code === "auth/user-not-found"){
+
+msg(
+"lMsg",
+"You don't have an account. Please create an account first."
+);
+
+}
+else if(
+e.code === "auth/invalid-credential" ||
+e.code === "auth/wrong-password"
+){
+
+msg(
+"lMsg",
+"Incorrect email or password."
+);
+
+}
+else if(e.code === "auth/invalid-email"){
+
+msg(
+"lMsg",
+"Please enter a valid email address."
+);
+
+}
+else{
+
+msg(
+"lMsg",
+e.message
+);
+
+}
+
+}
+
+
+
+/* ==========================================
+   SAVE USER DETAILS
+========================================== */
+
+window.saveDetails = async function(){
+
+if(!user)
+return;
+
+
+if(
+!name.value ||
+!age.value ||
+!phone.value
+){
+
+msg(
+"dMsg",
+"Please enter required details."
+);
+
+return;
+
+}
+
+
+try{
+
+await setDoc(
+
+doc(db,"users",user.uid),
+
+{
+
+fullName:
+name.value.trim(),
+
+age:
+Number(age.value),
+
+phone:
+phone.value.trim(),
+
+emergencyContact:
+emergency.value.trim(),
+
+email:
+user.email,
+
+role:role
+
+},
+
+{merge:true}
+
+);
+
+
+msg(
+"dMsg",
+"Details saved successfully!",
+true
+);
+
+
+setTimeout(
+async () => {
+
+page("app");
+
+section(
+role === "caretaker"
+?
+"caretaker"
+:
+"patient"
+);
+await loadDetails();
+if (role === "patient") {
+    await loadSchedules();
+}
+
+
+startChecker();
+
+},
+500
+);
+
+}
+
+catch(e){
+
+msg(
+"dMsg",
+e.message
+);
+
+}
+
+};
+
+
+
+/* ==========================================
+   LOAD USER DETAILS
+========================================== */
+
+async function loadDetails(){
+
+if(!user)
+return;
+
+
+const s =
+await getDoc(
+doc(db,"users",user.uid)
+);
+
+
+if(s.exists()){
+
+welcomeUser.innerHTML =
+"<b>Welcome, "
++
+safe(
+s.data().fullName
+||
+user.email
+)
++
+"</b><p class='small'>"
++
+safe(user.email)
++
+"</p>";
+
+}
+
+}
+
+
+
+/* ==========================================
+   ADD MEDICINE
+========================================== */
+window.toggleTime = function(period) {
+
+    const checkbox = document.getElementById(period + "Check");
+    const timeInput = document.getElementById(period + "Time");
+
+    if (checkbox.checked) {
+        timeInput.disabled = false;
+    } else {
+        timeInput.disabled = true;
+        timeInput.value = "";
+    }
+};
+window.addSchedule = async function(){
+
+if(!user)
+return;
+
+
+if(
+!medicine.value ||
+!dose.value ||
+!dateFrom.value ||
+!dateTo.value
+){
+
+msg(
+"sMsg",
+"Please enter medicine, dosage, date and time."
+);
+
+return;
+
+}
+
+const selectedTimes = [];
+
+if (morningCheck.checked) {
+    if (!morningTime.value) {
+        msg("sMsg", "Please enter morning time.", true);
+        return;
+    }
+
+    selectedTimes.push({
+        period: "Morning",
+        time: morningTime.value
+    });
+}
+
+if (afternoonCheck.checked) {
+    if (!afternoonTime.value) {
+        msg("sMsg", "Please enter afternoon time.", true);
+        return;
+    }
+
+    selectedTimes.push({
+        period: "Afternoon",
+        time: afternoonTime.value
+    });
+}
+
+if (nightCheck.checked) {
+    if (!nightTime.value) {
+        msg("sMsg", "Please enter night time.", true);
+        return;
+    }
+
+    selectedTimes.push({
+        period: "Night",
+        time: nightTime.value
+    });
+}
+
+if (selectedTimes.length === 0) {
+    msg("sMsg", "Please select at least one medicine time.", true);
+    return;
+}
+try{
+
+await addDoc(
+
+collection(db,"schedules"),
+
+{
+
+userId:
+user.uid,
+
+userEmail:
+user.email,
+
+medicineName:
+medicine.value.trim(),
+
+dosage:
+dose.value.trim(),
+
+dateFrom:
+dateFrom.value,
+dateTo:
+dateTo.value,
+times: selectedTimes,
+
+instructions:
+instruction.value.trim(),
+
+status:
+"pending",
+
+notified:
+false,
+
+createdAt:
+serverTimestamp()
+
+}
+
+);
+
+
+msg(
+"sMsg",
+"Medicine schedule saved successfully!",
+true
+);
+
+
+medicine.value = "";
+
+dose.value = "";
+
+dateFrom.value = "";
+dateTo.value = "";
+morningTime.value = "";
+afternoonTime.value = "";
+nightTime.value = "";
+morningCheck.checked = false;
+afternoonCheck.checked = false;
+nightCheck.checked = false;
+
+morningTime.disabled = true;
+afternoonTime.disabled = true;
+nightTime.disabled = true;
+
+instruction.value = "";
+
+
+loadSchedules();
+
+}
+
+catch(e){
+
+msg(
+"sMsg",
+e.message
+);
+
+}
+
+};
+
+
+
+/* ==========================================
+   GET MY SCHEDULES
+========================================== */
+
+async function getMySchedules(){
+
+const q =
+query(
+collection(db,"schedules"),
+where(
+"userId",
+"==",
+user.uid
+)
+);
+
+
+const s =
+await getDocs(q);
+
+
+const a = [];
+
+
+s.forEach(
+d =>
+a.push(
+{
+id:d.id,
+...d.data()
+}
+)
+);
+
+
+a.sort(
+    (x,y) =>
+        (x.dateFrom || "")
+        .localeCompare(
+            y.dateFrom || ""
+        )
+);
+
+
+return a;
+
+}
+
+
+
+/* ==========================================
+   SCHEDULE CARD
+========================================== */
+
+function card(s){
+
+    const missedDose = missed(s);
+
+    return `
+    <div class="${missedDose ? "alert" : "schedule"}">
+
+        <h3>
+            💊 ${safe(s.medicineName)}
+        </h3>
+
+        <p>
+            <b>Dosage:</b>
+            ${safe(s.dosage)}
+        </p>
+
+        <p>
+            <b>Date:</b>
+            ${safe(s.dateFrom)}
+            to
+            ${safe(s.dateTo)}
+        </p>
+
+        <p>
+            <b>Medicine Times:</b><br>
+            ${
+                (s.times || [])
+                .map(t =>
+                    `${safe(t.period)}: ${safe(t.time)}`
+                )
+                .join("<br>")
+            }
+        </p>
+
+        <p>
+            <b>Instructions:</b>
+            ${safe(s.instructions || "Not specified")}
+        </p>
+
+        <p>
+            <b>Status:</b>
+            ${missedDose ? "⚠️ Missed" : safe(s.status)}
+        </p>
+
+        <div class="actions">
+
+            ${
+                s.status !== "taken"
+                ?
+                `<button
+                    class="green"
+                    onclick="takenNow('${s.id}')">
+                    Taken
+                </button>`
+                :
+                `<button
+                    class="gray"
+                    onclick="pendingNow('${s.id}')">
+                    Pending
+                </button>`
+            }
+
+            <button
+                class="danger"
+                onclick="removeNow('${s.id}')">
+                Delete
+            </button>
+
+        </div>
+
+    </div>
+    `;
+}
+
+
+/* ==========================================
+   CHECK MISSED
+========================================== */
+
+function missed(s){
+
+    if(s.status === "taken")
+        return false;
+
+    if(!s.dateFrom || !s.dateTo)
+        return false;
+
+    if(!s.times || s.times.length === 0)
+        return false;
+
+    const now = new Date();
+
+    const today =
+        now.toISOString().split("T")[0];
+
+    // Medicine has not started yet
+    if(today < s.dateFrom)
+        return false;
+
+    // Medicine schedule has ended
+    if(today > s.dateTo)
+        return false;
+
+    /*
+       Check the selected times for THIS medicine.
+       Only selected Morning/Afternoon/Night times
+       can become missed.
+    */
+
+    for(const selected of s.times){
+
+        if(!selected.time)
+            continue;
+
+        const due =
+            new Date(
+                `${today}T${selected.time}`
+            );
+
+        if(isNaN(due))
+            continue;
+
+        const diff =
+            now - due;
+
+        /*
+           A dose is considered missed
+           after 30 minutes.
+        */
+
+        if(
+            diff > 30 * 60000
+        ){
+
+            return true;
+
+        }
+
+    }
+
+    return false;
+
+}
+
+
+
+/* ==========================================
+   LOAD SCHEDULES
+========================================== */
+
+async function loadSchedules(){
+
+if(!user)
+return;
+
+
+try{
+
+const a =
+await getMySchedules();
+
+
+renderStats(a);
+
+
+patientList.innerHTML =
+a.length
+?
+a.map(card).join("")
+:
+"<p>No medicine schedules added yet.</p>";
+
+
+myList.innerHTML =
+patientList.innerHTML;
+
+}
+
+catch(e){
+
+patientList.innerText =
+e.message;
+
+}
+
+}
+
+
+
+/* ==========================================
+   STATISTICS
+========================================== */
+
+function renderStats(a){
+
+const t =
+a.length;
+
+const k =
+a.filter(
+x => x.status === "taken"
+).length;
+
+const m =
+a.filter(missed).length;
+
+
+total.innerText =
+t;
+
+taken.innerText =
+k;
+
+missed.innerText =
+m;
+
+pending.innerText =
+Math.max(
+0,
+t-k-m
+);
+
+}
+
+
+
+/* ==========================================
+   TAKEN
+========================================== */
+
+window.takenNow =
+async function(id){
+
+await updateDoc(
+doc(db,"schedules",id),
+{
+
+status:"taken",
+
+takenAt:
+serverTimestamp()
+
+}
+);
+
+loadSchedules();
+
+loadCaretaker();
+
+};
+
+
+
+/* ==========================================
+   PENDING
+========================================== */
+
+window.pendingNow =
+async function(id){
+
+await updateDoc(
+doc(db,"schedules",id),
+{
+
+status:"pending",
+
+notified:false
+
+}
+);
+
+loadSchedules();
+
+loadCaretaker();
+
+};
+
+
+
+/* ==========================================
+   DELETE
+========================================== */
+
+window.removeNow =
+async function(id){
+
+if(
+confirm(
+"Delete this medicine schedule?"
+)
+){
+
+await deleteDoc(
+doc(db,"schedules",id)
+);
+
+loadSchedules();
+
+loadCaretaker();
+
+}
+
+};
+
+
+
+/* ==========================================
+   CARETAKER DASHBOARD
+========================================== */
+
+async function loadCaretaker(){
+
+try{
+
+const s =
+await getDocs(
+collection(db,"schedules")
+);
+
+
+const a = [];
+
+
+s.forEach(
+d =>
+a.push(
+{
+id:d.id,
+...d.data()
+}
+)
+);
+
+
+const k =
+a.filter(
+x => x.status === "taken"
+).length;
+
+
+const m =
+a.filter(missed).length;
+
+
+ctotal.innerText =
+a.length;
+
+ctaken.innerText =
+k;
+
+cmissed.innerText =
+m;
+
+cpending.innerText =
+Math.max(
+0,
+a.length-k-m
+);
+
+
+allSchedules.innerHTML =
+a.length
+?
+a.map(card).join("")
+:
+"<p>No medicine schedules added yet.</p>";
+
+
+const ms =
+a.filter(missed);
+
+
+alerts.innerHTML =
+ms.length
+?
+
+ms.map(
+x => `
+
+<div class="alert">
+
+<b>
+⚠️ Missed Dose
+</b>
+
+<p>
+${safe(x.medicineName)}
+-
+${safe(x.dosage)}
+</p>
+
+<p>
+<b>Date:</b>
+${safe(x.dateFrom)}
+to
+${safe(x.dateTo)}
+</p>
+
+<p>
+<b>Times:</b><br>
+${
+    (x.times || [])
+    .map(t =>
+        `${safe(t.period)}: ${safe(t.time)}`
+    )
+    .join("<br>")
+}
+</p>
+
+<p>
+${safe(x.userEmail || "")}
+</p>
+
+</div>
+
+`
+).join("")
+
+:
+
+"<p>No missed doses. ✅</p>";
+
+}
+
+catch(e){
+
+allSchedules.innerText =
+e.message;
+
+}
+
+}
+
+
+
+/* ==========================================
+   NOTIFICATION
+========================================== */
+
+async function notify(title,body){
+
+try{
+
+if("Notification" in window){
+
+if(
+Notification.permission ===
+"default"
+){
+
+await Notification.requestPermission();
+
+}
+
+
+if(
+Notification.permission ===
+"granted"
+){
+
+new Notification(
+title,
+{
+body:body
+}
+);
+
+}
+
+}
+
+}
+
+catch(e){
+
+console.log(e);
+
+}
+
+}
+
+
+
+/* ==========================================
+   MEDICINE CHECKER
+========================================== */
+async function checkMedicines(){
+
+    if(!user)
+        return;
+
+    try{
+
+        const schedules = await getMySchedules();
+
+        const now = new Date();
+
+        for(const s of schedules){
+
+            // Make sure the medicine has selected times
+            if(!s.times || s.times.length === 0)
+                continue;
+
+            // Check date range
+            if(!s.dateFrom || !s.dateTo)
+                continue;
+
+            const today =
+                now.toISOString().split("T")[0];
+
+            // Medicine is not active yet
+            if(today < s.dateFrom)
+                continue;
+
+            // Medicine schedule has ended
+            if(today > s.dateTo)
+                continue;
+
+
+            /*
+              Each medicine has its OWN selected times.
+
+              Example:
+
+              [
+                {period:"Morning", time:"08:00"},
+                {period:"Night", time:"21:00"}
+              ]
+
+              Afternoon will simply not be checked.
+            */
+
+            for(const selected of s.times){
+
+                if(!selected.time)
+                    continue;
+
+
+                const due =
+                    new Date(
+                        `${today}T${selected.time}`
+                    );
+
+
+                if(isNaN(due))
+                    continue;
+
+
+                const diff =
+                    now - due;
+
+
+                /*
+                  Create a unique key for this
+                  particular medicine dose.
+
+                  Example:
+                  2026-08-25_Morning_08:00
+                */
+
+                const doseKey =
+                    `${today}_${selected.period}_${selected.time}`;
+
+
+                const notifiedKeys =
+                    s.notifiedKeys || [];
+
+
+                /*
+                  Reminder window:
+                  from the selected time
+                  up to 10 minutes after it.
+                */
+
+                if(
+
+                    s.status === "pending"
+
+                    &&
+
+                    diff >= 0
+
+                    &&
+
+                    diff <= 10 * 60000
+
+                    &&
+
+                    !notifiedKeys.includes(doseKey)
+
+                ){
+
+                    await notify(
+
+                        "💊 MediCare Reminder",
+
+                        `${s.medicineName} - ${s.dosage} (${selected.period})`
+
+                    );
+
+
+                    await updateDoc(
+
+                        doc(
+                            db,
+                            "schedules",
+                            s.id
+                        ),
+
+                        {
+
+                            notifiedKeys:
+                            [
+                                ...notifiedKeys,
+                                doseKey
+                            ]
+
+                        }
+
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        loadSchedules();
+
+    }
+
+    catch(e){
+
+        console.log(
+            "Reminder checker:",
+            e
+        );
+
+    }
+
+}
+
+
+
+/* ==========================================
+   START NOTIFICATION CHECKER
+========================================== */
+
+function startChecker(){
+
+if(timer)
+clearInterval(timer);
+
+
+checkMedicines();
+
+
+timer =
+setInterval(
+checkMedicines,
+60000
+);
+
+}
+
+
+
+/* ==========================================
+   LOGOUT
+========================================== */
+
+window.logout =
+async function(){
+
+await signOut(auth);
+
+
+user = null;
+
+
+if(timer)
+clearInterval(timer);
+
+
+page("welcome");
+
+};
+
+
+
+/* ==========================================
+   FIREBASE AUTH STATE
+========================================== */
+
+onAuthStateChanged(
+auth,
+async u => {
+
+if(u)
+user = u;
+
+}
+);
+
+
+
+/* ==========================================
+   SECURITY FUNCTION
+========================================== */
+
+function safe(v){
+
+return String(v ?? "")
+
+.replaceAll(
+"&",
+"&amp;"
+)
+
+.replaceAll(
+"<",
+"&lt;"
+)
+
+.replaceAll(
+">",
+"&gt;"
+)
+
+.replaceAll(
+'"',
+"&quot;"
+)
+
+.replaceAll(
+"'",
+"&#039;"
+);
+
+}
+}
+</script>
+
+</body>
+</html>
