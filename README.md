@@ -45,12 +45,6 @@ Elderly people may forget medication schedules, dosage instructions, or whether 
 4. Configure the patient account and medication schedule.
 5. Test reminders and caregiver notifications.
 
-## 🔗 Project Links
-
-- **GitHub Repository:** Add your repository URL here.
-- **APK Download:** Add your GitHub Releases URL here.
-- **Demo Video:** Add a demonstration link here, if available.
-
 ## 🔐 Privacy and Safety
 
 - Keep account credentials and API keys private.
@@ -66,7 +60,7 @@ Elderly people may forget medication schedules, dosage instructions, or whether 
 - Mobile application integration
 - User-focused healthcare technology
 
-## 👨‍💻 Authors
+## 👨‍💻 Author
 
 Jeswanth Allu,Jyothi bhaskar,Avinash,Jagadeesh,Kuladeepak,Ramadevi
 
